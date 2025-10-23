@@ -23,6 +23,7 @@ import yaml
 from scripts.predictor_corregido_simple import PredictorCorregidoSimple
 from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
 from src.analysis.alerts import AlertManager
+from src.analysis.simple_alerts import SimpleAlertManager
 
 app = Flask(__name__)
 
@@ -352,7 +353,7 @@ def alerts():
     Página de alertas de valor activas.
     """
     try:
-        alert_manager = AlertManager()
+        alert_manager = SimpleAlertManager()
         
         # Limpiar alertas expiradas
         expired_count = alert_manager.clean_expired_alerts()
@@ -387,7 +388,7 @@ def alerts():
                              alerts=[],
                              alerts_by_urgency={'CRITICAL': [], 'HIGH': [], 'MEDIUM': [], 'LOW': []},
                              summary={'total_alerts': 0, 'critical_alerts': 0, 'high_alerts': 0, 
-                                    'medium_alerts': 0, 'low_alerts': 0, 'best_edge': 0, 'total_exposure': 0},
+                                    'medium_alerts': 0, 'low_alerts': 0, 'best_edge': 0, 'avg_edge': 0},
                              expired_cleaned=0)
 
 
@@ -423,13 +424,9 @@ def api_generate_alerts():
                 match_data = row.to_dict()
                 basic_predictions = predictor.predict_all(match_data)
                 
-                # Generar análisis completo con reglas dinámicas
-                reglas = calcular_reglas_dinamicas(match_data, predictor)
-                
                 matches_with_analysis.append({
                     'match_data': match_data,
-                    'analysis': basic_predictions,
-                    'reglas': reglas
+                    'analysis': basic_predictions
                 })
             except Exception as e:
                 print(f"Error procesando partido {idx}: {e}")
@@ -437,9 +434,9 @@ def api_generate_alerts():
         
         print(f"Análisis completados: {len(matches_with_analysis)}")
         
-        # Generar alertas
-        alert_manager = AlertManager()
-        alerts = alert_manager.generate_alerts(matches_with_analysis)
+        # Generar alertas usando el sistema simplificado
+        alert_manager = SimpleAlertManager()
+        alerts = alert_manager.generate_alerts_from_predictions(matches_with_analysis)
         
         print(f"Alertas generadas: {len(alerts)}")
         
