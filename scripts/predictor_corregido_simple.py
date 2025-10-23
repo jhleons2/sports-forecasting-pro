@@ -180,7 +180,9 @@ class PredictorCorregidoSimple:
                 'under_2_5': float(ou_probs['under_2_5'])
             },
             'events': events,
-            'reglas': reglas
+            'reglas': reglas,
+            'elo_home': float(elo_home),
+            'elo_away': float(elo_away)
         }
     
     def _intensity(self, row):

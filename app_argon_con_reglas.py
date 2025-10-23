@@ -213,6 +213,10 @@ def predict_match(league, match_idx):
     match_data['fixture_date'] = match_data.get('Date', 'N/A')
     match_data['fixture_time'] = match_data.get('Time', 'N/A')
     
+    # Añadir ratings ELO
+    match_data['HomeELO'] = predictions.get('elo_home', 1500)
+    match_data['AwayELO'] = predictions.get('elo_away', 1500)
+    
     # Fecha de hoy para mostrar en el dashboard
     fecha_hoy = datetime.now().strftime('%Y-%m-%d')
     
