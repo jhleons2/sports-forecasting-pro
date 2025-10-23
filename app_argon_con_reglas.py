@@ -172,7 +172,7 @@ def index():
         last_update = datetime.now().strftime('%H:%M')
         
         system_stats = {
-            'model_accuracy': f"{elo_accuracy:.1f}%",
+            'model_accuracy': f"{model_accuracy:.1f}%",
             'matches_analyzed': f"{total_matches:,}",
             'avg_confidence': f"{avg_confidence:.1f}%",
             'last_update': last_update
