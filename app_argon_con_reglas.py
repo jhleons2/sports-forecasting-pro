@@ -475,7 +475,7 @@ if __name__ == '__main__':
     print("  2. Últimos 5 de local (misma liga)")
     print("  3. Últimos 5 de visitante (misma liga)")
     print("  4. 5 entre sí (H2H)")
-    print("  5. Bajas de jugadores (placeholder)")
+    print("  5. Bajas de jugadores (datos reales FPL)")
     print("\nIniciando servidor...")
     print("Dashboard disponible en: http://localhost:5000")
     print("\nPresiona Ctrl+C para detener")
