@@ -8,45 +8,11 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">ROI Backtesting</h5>
-                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.roi }}</span>
+                        <h5 class="card-title text-uppercase text-muted mb-0">Precisión del Modelo</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ system_stats.model_accuracy }}</span>
                     </div>
                     <div class="col-auto">
                         <div class="icon icon-shape bg-success text-white rounded-circle shadow">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-lg-6">
-        <div class="card card-stats mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">Próximos Partidos</h5>
-                        <span class="h2 font-weight-bold mb-0">{{ total_fixtures }}</span>
-                    </div>
-                    <div class="col-auto">
-                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-lg-6">
-        <div class="card card-stats mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">Hit-rate</h5>
-                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.hit_rate }}</span>
-                    </div>
-                    <div class="col-auto">
-                        <div class="icon icon-shape bg-info text-white rounded-circle shadow">
                             <i class="fas fa-bullseye"></i>
                         </div>
                     </div>
@@ -59,12 +25,46 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">PNL Total</h5>
-                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.pnl }}</span>
+                        <h5 class="card-title text-uppercase text-muted mb-0">Partidos Analizados</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ system_stats.matches_analyzed }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
+                            <i class="fas fa-database"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">Confianza Promedio</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ system_stats.avg_confidence }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-info text-white rounded-circle shadow">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">Última Actualización</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ system_stats.last_update }}</span>
                     </div>
                     <div class="col-auto">
                         <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
-                            <i class="fas fa-coins"></i>
+                            <i class="fas fa-clock"></i>
                         </div>
                     </div>
                 </div>
