@@ -499,9 +499,14 @@ if __name__ == '__main__':
     print("\nPresiona Ctrl+C para detener")
     print("=" * 70 + "\n")
     
+    # Endpoint de healthcheck para Railway
+    @app.route('/health')
+    def health_check():
+        return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
+    
     # Configuración para Railway
     import os
-    PORT = int(os.environ.get("PORT", 5000))
+    PORT = int(os.environ.get("PORT", 8080))
     HOST = "0.0.0.0"  # Railway requiere 0.0.0.0
     DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
     

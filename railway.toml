@@ -1,18 +1,19 @@
 # Railway Configuration
-# Este archivo configura el proyecto para Railway
+# Configuración específica para Railway
 
 [build]
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "python app_argon_con_reglas.py"
-healthcheckPath = "/"
-healthcheckTimeout = 100
+startCommand = "./start.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [env]
-PORT = 5000
+PORT = 8080
 FLASK_ENV = "production"
 FLASK_DEBUG = "False"
-PYTHONPATH = "."
+PYTHONPATH = "/app"
+HOST = "0.0.0.0"
