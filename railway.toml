@@ -2,7 +2,7 @@
 # Este archivo configura el proyecto para Railway
 
 [build]
-builder = "nixpacks"
+builder = "DOCKERFILE"
 
 [deploy]
 startCommand = "python app_argon_con_reglas.py"
