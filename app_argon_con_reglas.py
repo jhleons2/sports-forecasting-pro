@@ -22,6 +22,7 @@ import yaml
 # NUEVO: Usar predictor CON REGLAS DINÁMICAS CORREGIDO
 from scripts.predictor_corregido_simple import PredictorCorregidoSimple
 from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
+from src.analysis.alerts import AlertManager
 
 app = Flask(__name__)
 
@@ -343,6 +344,126 @@ def api_fixtures():
         fixtures = upcoming_fixtures
     
     return jsonify(fixtures.head(50).to_dict('records'))
+
+
+@app.route('/alerts')
+def alerts():
+    """
+    Página de alertas de valor activas.
+    """
+    try:
+        alert_manager = AlertManager()
+        
+        # Limpiar alertas expiradas
+        expired_count = alert_manager.clean_expired_alerts()
+        
+        # Obtener alertas activas
+        active_alerts = alert_manager.get_active_alerts()
+        
+        # Generar resumen
+        summary = alert_manager.generate_alert_summary()
+        
+        # Agrupar por urgencia
+        alerts_by_urgency = {
+            'CRITICAL': alert_manager.get_alerts_by_urgency('CRITICAL'),
+            'HIGH': alert_manager.get_alerts_by_urgency('HIGH'),
+            'MEDIUM': alert_manager.get_alerts_by_urgency('MEDIUM'),
+            'LOW': alert_manager.get_alerts_by_urgency('LOW')
+        }
+        
+        return render_template('alerts.html',
+                             alerts=active_alerts,
+                             alerts_by_urgency=alerts_by_urgency,
+                             summary=summary,
+                             expired_cleaned=expired_count)
+    
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR en alertas: {e}")
+        print(error_trace)
+        # Retornar página con alertas vacías en caso de error
+        return render_template('alerts.html',
+                             alerts=[],
+                             alerts_by_urgency={'CRITICAL': [], 'HIGH': [], 'MEDIUM': [], 'LOW': []},
+                             summary={'total_alerts': 0, 'critical_alerts': 0, 'high_alerts': 0, 
+                                    'medium_alerts': 0, 'low_alerts': 0, 'best_edge': 0, 'total_exposure': 0},
+                             expired_cleaned=0)
+
+
+@app.route('/api/generate_alerts', methods=['POST'])
+def api_generate_alerts():
+    """
+    API endpoint para generar alertas automáticas.
+    Solo procesa los próximos 50 partidos para evitar sobrecarga.
+    """
+    try:
+        # Cargar fixtures con análisis
+        fixtures_df = pd.read_parquet(PROC / "upcoming_fixtures.parquet")
+        
+        # Filtrar solo próximos partidos (próximas 48 horas) o primeros 50
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        cutoff = now + timedelta(hours=48)
+        
+        # Intentar filtrar por fecha, si falla usar los primeros 50
+        try:
+            fixtures_df['DateObj'] = pd.to_datetime(fixtures_df['Date'])
+            fixtures_df = fixtures_df[fixtures_df['DateObj'] <= cutoff].head(50)
+        except:
+            fixtures_df = fixtures_df.head(50)
+        
+        print(f"Generando alertas para {len(fixtures_df)} partidos...")
+        
+        # Generar análisis para partidos seleccionados
+        matches_with_analysis = []
+        
+        for idx, row in fixtures_df.iterrows():
+            try:
+                match_data = row.to_dict()
+                basic_predictions = predictor.predict_all(match_data)
+                
+                # Generar análisis completo con reglas dinámicas
+                reglas = calcular_reglas_dinamicas(match_data, predictor)
+                
+                matches_with_analysis.append({
+                    'match_data': match_data,
+                    'analysis': basic_predictions,
+                    'reglas': reglas
+                })
+            except Exception as e:
+                print(f"Error procesando partido {idx}: {e}")
+                continue
+        
+        print(f"Análisis completados: {len(matches_with_analysis)}")
+        
+        # Generar alertas
+        alert_manager = AlertManager()
+        alerts = alert_manager.generate_alerts(matches_with_analysis)
+        
+        print(f"Alertas generadas: {len(alerts)}")
+        
+        # Guardar alertas
+        if alerts:
+            alert_manager.save_alerts(alerts)
+        
+        return jsonify({
+            'success': True,
+            'alerts_generated': len(alerts),
+            'matches_processed': len(matches_with_analysis),
+            'message': f'Se generaron {len(alerts)} alertas de valor'
+        })
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR generando alertas: {e}")
+        print(error_trace)
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Error generando alertas'
+        }), 500
 
 
 if __name__ == '__main__':
