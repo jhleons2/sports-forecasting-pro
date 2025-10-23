@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}Análisis Completo - {{ match_data.HomeTeam }} vs {{ match_data.AwayTeam }}{% endblock %}
+
+{% block styles %}
+<style>
+.analysis-card {
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.edge-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.edge-positive {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.edge-negative {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    color: white;
+}
+
+.edge-neutral {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.insight-item {
+    background: rgba(102, 126, 234, 0.1);
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.recommendation-card {
+    border: 2px solid;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.recommendation-strong {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.05);
+}
+
+.recommendation-value {
+    border-color: #17a2b8;
+    background: rgba(23, 162, 184, 0.05);
+}
+
+.recommendation-weak {
+    border-color: #ffc107;
+    background: rgba(255, 193, 7, 0.05);
+}
+
+.recommendation-avoid {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.probability-bar {
+    height: 20px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background: #e9ecef;
+}
+
+.probability-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+.prob-home { background: linear-gradient(135deg, #667eea, #764ba2); }
+.prob-draw { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.prob-away { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+.risk-indicator {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.risk-low { background: #28a745; color: white; }
+.risk-medium { background: #ffc107; color: black; }
+.risk-high { background: #dc3545; color: white; }
+
+.stake-calculator {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.kelly-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header del partido -->
+<div class="match-header">
+    <div class="row align-items-center">
+        <div class="col-5 text-center">
+            <h2 class="text-white mb-0">{{ match_data.HomeTeam }}</h2>
+            <p class="text-white-50 mb-0">ELO: {{ "%.0f"|format(match_data.EloHome) }}</p>
+        </div>
+        <div class="col-2 text-center">
+            <h1 class="text-white mb-0">VS</h1>
+            <p class="text-white-50 mb-0">
+                <i class="far fa-calendar"></i> {{ match_data.Date }}
+            </p>
+        </div>
+        <div class="col-5 text-center">
+            <h2 class="text-white mb-0">{{ match_data.AwayTeam }}</h2>
+            <p class="text-white-50 mb-0">ELO: {{ "%.0f"|format(match_data.EloAway) }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    
+    <!-- Resumen Ejecutivo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-primary">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Resumen Ejecutivo
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Nivel de Riesgo</h5>
+                            <span class="risk-indicator risk-{{ analysis.risk_level.lower() }}">
+                                {{ analysis.risk_level }}
+                            </span>
+                            <p class="text-muted mt-2 small">
+                                {% if analysis.risk_level == 'LOW' %}
+                                    Partido equilibrado - apuestas seguras
+                                {% elif analysis.risk_level == 'MEDIUM' %}
+                                    Oportunidades moderadas - diversificar
+                                {% else %}
+                                    Alto riesgo/recompensa - stakes pequeños
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Favorito</h5>
+                            <h4 class="text-primary">{{ translate_team_position(analysis.favorite_team) }}</h4>
+                            <p class="text-muted">{{ "%.1f"|format(analysis.favorite_prob * 100) }}% probabilidad</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Equilibrio</h5>
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-draw" style="width: {{ analysis.balanced_score * 100 }}%"></div>
+                            </div>
+                            <p class="text-muted mt-2">{{ "%.0f"|format(analysis.balanced_score * 100) }}% equilibrado</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="text-muted">Oportunidades</h5>
+                            <h4 class="text-success">{{ analysis.recommended_bets|length }}</h4>
+                            <p class="text-muted">Apuestas con valor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights Automáticos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-info">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        Insights Automáticos
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% for insight in analysis.key_insights %}
+                    <div class="insight-item">
+                        <i class="fas fa-arrow-right text-primary mr-2"></i>
+                        {{ insight }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis de Ventajas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-success">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-percentage mr-2"></i>
+                        Análisis de Ventajas y Recomendaciones
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for edge in analysis.edge_analysis %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card recommendation-card recommendation-{{ edge.recommendation.value.lower() }}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0">{{ edge.market }}</h6>
+                                        {% if edge.edge > 0 %}
+                                        <span class="edge-display edge-positive">
+                                            <i class="fas fa-arrow-up mr-1"></i>+{{ "%.1f"|format(edge.edge * 100) }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="edge-display edge-negative">
+                                            <i class="fas fa-arrow-down mr-1"></i>{{ "%.1f"|format(edge.edge * 100) }}%
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <h6 class="text-muted">{{ edge.selection }}</h6>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted">Cuota</small>
+                                            <p class="mb-0 font-weight-bold">{{ "%.2f"|format(edge.odds) }}</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Probabilidad</small>
+                                            <p class="mb-0 font-weight-bold">{{ "%.1f"|format(edge.model_prob * 100) }}%</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Apuesta Sugerida</small>
+                                            <p class="mb-0 kelly-display">{{ "%.1f"|format(edge.kelly_fraction * 100) }}%</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <span class="badge badge-{{ 'success' if edge.recommendation.value in ['STRONG_VALUE', 'VALUE'] else 'warning' if edge.recommendation.value == 'WEAK_VALUE' else 'danger' }}">
+                                            {{ edge.confidence }} Confianza
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculadora de Apuestas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-warning">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Calculadora de Apuestas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="stake-calculator">
+                        <div class="form-group">
+                            <label class="text-white">Bankroll Disponible:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input type="number" class="form-control" id="bankroll" value="1000" min="100" step="100">
+                            </div>
+                        </div>
+                        
+                        <div id="stake-calculations">
+                            <!-- Se llenará con JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-danger">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Gestión de Riesgo
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle mr-2"></i>Recomendaciones de Riesgo</h6>
+                        <ul class="mb-0">
+                            <li>Nunca apostar más del 5% del capital en un solo partido</li>
+                            <li>Usar tamaño de apuesta conservador (25% del sugerido)</li>
+                            <li>Diversificar entre diferentes mercados</li>
+                            <li>Evitar apuestas con ventaja negativa</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h6 class="text-muted">Exposición Total Recomendada</h6>
+                        <h3 class="text-primary" id="total-exposure">0%</h3>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%" id="exposure-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Probabilidades -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card analysis-card border-0">
+                <div class="card-header bg-gradient-secondary">
+                    <h3 class="mb-0 text-white">
+                        <i class="fas fa-chart-pie mr-2"></i>
+                        Visualización de Probabilidades
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-center">{{ match_data.HomeTeam }}</h6>
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-home" style="width: {{ formatted_predictions['1x2'].home * 100 }}%"></div>
+                            </div>
+                            <p class="text-center mt-2 font-weight-bold">{{ "%.1f"|format(formatted_predictions['1x2'].home * 100) }}%</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-center">Empate</h6>
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-draw" style="width: {{ formatted_predictions['1x2'].draw * 100 }}%"></div>
+                            </div>
+                            <p class="text-center mt-2 font-weight-bold">{{ "%.1f"|format(formatted_predictions['1x2'].draw * 100) }}%</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-center">{{ match_data.AwayTeam }}</h6>
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-away" style="width: {{ formatted_predictions['1x2'].away * 100 }}%"></div>
+                            </div>
+                            <p class="text-center mt-2 font-weight-bold">{{ "%.1f"|format(formatted_predictions['1x2'].away * 100) }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculadora de stakes
+    const bankrollInput = document.getElementById('bankroll');
+    const stakeCalculations = document.getElementById('stake-calculations');
+    const totalExposure = document.getElementById('total-exposure');
+    const exposureBar = document.getElementById('exposure-bar');
+    
+    function updateStakeCalculations() {
+        const bankroll = parseFloat(bankrollInput.value) || 1000;
+        let totalStakes = 0;
+        let calculationsHTML = '';
+        
+        // Datos de edges (se pasarán desde el backend)
+        const edges = {{ serializable_edges | tojson }};
+        
+        edges.forEach(edge => {
+            if (edge.edge > 0.02) { // Solo mostrar edges positivos
+                const kellyFraction = edge.kelly_fraction;
+                const stakeAmount = kellyFraction * bankroll;
+                totalStakes += stakeAmount;
+                
+                calculationsHTML += `
+                    <div class="mb-2">
+                        <small class="text-white-50">${edge.market} - ${edge.selection}</small>
+                        <div class="d-flex justify-content-between">
+                            <span>Kelly: ${(kellyFraction * 100).toFixed(1)}%</span>
+                            <span class="font-weight-bold">$${stakeAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        stakeCalculations.innerHTML = calculationsHTML || '<p class="text-white-50">No hay apuestas recomendadas</p>';
+        
+        // Actualizar exposición total
+        const exposurePercent = (totalStakes / bankroll) * 100;
+        totalExposure.textContent = exposurePercent.toFixed(1) + '%';
+        exposureBar.style.width = Math.min(exposurePercent, 100) + '%';
+        
+        // Cambiar color según exposición
+        if (exposurePercent > 15) {
+            exposureBar.className = 'progress-bar bg-danger';
+        } else if (exposurePercent > 10) {
+            exposureBar.className = 'progress-bar bg-warning';
+        } else {
+            exposureBar.className = 'progress-bar bg-success';
+        }
+    }
+    
+    bankrollInput.addEventListener('input', updateStakeCalculations);
+    updateStakeCalculations();
+    
+    // Animaciones
+    const cards = document.querySelectorAll('.analysis-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

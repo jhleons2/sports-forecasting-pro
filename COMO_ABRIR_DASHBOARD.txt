@@ -1,0 +1,164 @@
+═══════════════════════════════════════════════════════════════
+   📊 CÓMO ABRIR EL DASHBOARD - PASO A PASO
+═══════════════════════════════════════════════════════════════
+
+✅ PASO 1: VERIFICAR QUE STREAMLIT ESTÁ CORRIENDO
+───────────────────────────────────────────────────────────────
+
+Deberías ver una NUEVA VENTANA de PowerShell con texto como:
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.X.X:8501
+
+⚠️ NO CIERRES ESA VENTANA mientras uses el dashboard!
+
+
+✅ PASO 2: ABRIR EL NAVEGADOR
+───────────────────────────────────────────────────────────────
+
+El navegador debería abrirse automáticamente.
+
+Si NO se abrió:
+  1. Abre Chrome, Edge o Firefox
+  2. En la barra de direcciones escribe:
+     http://localhost:8501
+  3. Presiona Enter
+
+
+✅ PASO 3: ESPERAR QUE CARGUE
+───────────────────────────────────────────────────────────────
+
+El dashboard puede tardar 10-20 segundos en cargar la primera vez.
+
+Verás:
+  1ro: Pantalla con logo de Streamlit
+  2do: "Running..." (corriendo)
+  3ro: Dashboard con tus datos
+
+
+✅ QUÉ DEBERÍAS VER:
+───────────────────────────────────────────────────────────────
+
+┌──────────────────────────────────────────────────────────┐
+│ Sports Forecasting PRO — Dashboard                        │
+├──────────────────────────────────────────────────────────┤
+│                                                            │
+│ 📊 KPIs                                                   │
+│ ┌──────────┬──────────┬──────────┬──────────┬─────────┐ │
+│ │ Turnover │   PNL    │   ROI    │ Apuestas │Hit-rate │ │
+│ │ 2,649.7M │ +945.5M  │ +35.68%  │   600    │ 58.67%  │ │
+│ └──────────┴──────────┴──────────┴──────────┴─────────┘ │
+│                                                            │
+│ 📈 Curva de equity                                        │
+│ [Gráfico interactivo aquí]                                │
+│                                                            │
+│ 📊 Desglose por mercado                                   │
+│ [Tabla con mercados 1X2, AH, OU2.5]                      │
+│                                                            │
+│ 🔍 Explorador de apuestas                                 │
+│ [Tabla con filtros y 600 apuestas]                       │
+└──────────────────────────────────────────────────────────┘
+
+
+🔧 SI HAY PROBLEMAS:
+───────────────────────────────────────────────────────────────
+
+PROBLEMA 1: "No se puede conectar" o "This site can't be reached"
+─────────────────────────────────────────────────────────────────
+SOLUCIÓN:
+  1. Verifica que la ventana de PowerShell con Streamlit está abierta
+  2. En esa ventana busca el texto "Local URL: http://localhost:8501"
+  3. Si no aparece, cierra la ventana y ejecuta:
+
+     cd "C:\Users\JHON LEON\Documents\Proyectos\Predictor de marcadores\sports-forecasting-pro"
+     python -m streamlit run app.py
+
+
+PROBLEMA 2: "No encuentro reports/backtest_log.csv"
+─────────────────────────────────────────────────────────────────
+SOLUCIÓN:
+  El dashboard necesita datos del backtest. Ejecuta primero:
+
+     python scripts/backtest_all_markets.py
+
+  Luego vuelve a abrir el dashboard.
+
+
+PROBLEMA 3: "Port 8501 is already in use"
+─────────────────────────────────────────────────────────────────
+SOLUCIÓN:
+  Ya hay un Streamlit corriendo. Usa otro puerto:
+
+     python -m streamlit run app.py --server.port 8502
+
+  Luego abre: http://localhost:8502
+
+
+PROBLEMA 4: La página carga pero no muestra datos
+─────────────────────────────────────────────────────────────────
+SOLUCIÓN:
+  1. Presiona "R" en el teclado (recarga el dashboard)
+  2. O refresca la página (F5)
+  3. Si no funciona, verifica que existe:
+     - data/processed/matches.parquet
+     - reports/backtest_log.csv
+
+
+🚀 COMANDOS RÁPIDOS:
+───────────────────────────────────────────────────────────────
+
+# Abrir dashboard (método 1 - recomendado):
+cd "C:\Users\JHON LEON\Documents\Proyectos\Predictor de marcadores\sports-forecasting-pro"
+python -m streamlit run app.py
+
+# Abrir dashboard (método 2 - con Makefile):
+make dashboard
+
+# Matar Streamlit si está colgado:
+Get-Process -Name python | Stop-Process -Force
+
+# Ver qué está corriendo en puerto 8501:
+netstat -ano | findstr :8501
+
+
+📍 URL DEL DASHBOARD:
+───────────────────────────────────────────────────────────────
+
+http://localhost:8501
+
+Copia y pega esto en tu navegador si no abre automáticamente.
+
+
+🎯 ATAJOS DEL DASHBOARD:
+───────────────────────────────────────────────────────────────
+
+Una vez dentro del dashboard:
+
+  R         = Recargar dashboard
+  C         = Limpiar caché
+  Ctrl+R    = Refrescar página
+  F11       = Pantalla completa
+
+
+✅ VERIFICACIÓN FINAL:
+───────────────────────────────────────────────────────────────
+
+Marca lo que ves:
+
+[ ] Ventana de PowerShell con "You can now view your Streamlit app"
+[ ] Navegador abierto en http://localhost:8501
+[ ] Dashboard cargado con KPIs
+[ ] Gráfico de equity visible
+[ ] Tabla de apuestas visible
+
+Si marcaste las 5, ¡FELICITACIONES! El dashboard está funcionando.
+
+Si no, revisa la sección "SI HAY PROBLEMAS" arriba.
+
+
+═══════════════════════════════════════════════════════════════
+         🎉 ¡DISFRUTA TU DASHBOARD!
+═══════════════════════════════════════════════════════════════
+

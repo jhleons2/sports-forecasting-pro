@@ -1,0 +1,5 @@
+position,team,played,won,draw,lost,points,goals_for,goals_against,goal_difference,form,competition,competition_code
+1,Estudiantes de La Plata,6,4,0,2,12,11,5,6,,Copa Libertadores,CLI
+2,Botafogo FR,6,4,0,2,12,8,5,3,,Copa Libertadores,CLI
+3,CF Universidad de Chile,6,3,1,2,10,8,6,2,,Copa Libertadores,CLI
+4,Carabobo FC,6,0,1,5,1,2,13,-11,,Copa Libertadores,CLI

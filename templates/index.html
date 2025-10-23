@@ -1,0 +1,818 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Header con estadísticas -->
+<div class="row">
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">ROI Backtesting</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.roi }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-success text-white rounded-circle shadow">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">Próximos Partidos</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ total_fixtures }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">Hit-rate</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.hit_rate }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-info text-white rounded-circle shadow">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card card-stats mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">PNL Total</h5>
+                        <span class="h2 font-weight-bold mb-0">{{ backtest_stats.pnl }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col">
+        <div class="jumbotron bg-gradient-primary text-white">
+            <div class="container">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-futbol mr-3"></i> Sports Forecasting PRO
+                </h1>
+                <p class="lead mb-4">
+                    Predicciones inteligentes con análisis detallado de estadísticas y eventos del juego
+                </p>
+                <div class="d-flex flex-wrap align-items-center">
+                    <span class="badge badge-success badge-lg mr-3 mb-2">
+                        <i class="fas fa-sync-alt"></i> Actualización Automática
+                    </span>
+                    <button class="btn btn-light btn-sm mr-3 mb-2" onclick="syncFixtures()">
+                        <i class="fas fa-sync"></i> Sincronizar Ahora
+                    </button>
+                    <span id="sync-status" class="badge badge-warning ml-2 mb-2" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Sincronizando...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Partidos por Liga -->
+{% for league, fixtures in fixtures_by_league.items() %}
+<div class="row mt-4">
+    <div class="col">
+        <div class="card shadow">
+            <div class="card-header border-0">
+                <h3 class="mb-0">
+                    <i class="fas fa-trophy text-warning"></i> 
+                    {% if league == 'E0' %}Premier League
+                    {% elif league == 'SP1' %}La Liga
+                    {% elif league == 'D1' %}Bundesliga
+                    {% elif league == 'I1' %}Serie A
+                    {% elif league == 'F1' %}Ligue 1
+                    {% else %}{{ league }}{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for match in fixtures[:10] %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card prediction-card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body d-flex flex-column">
+                                <div class="text-center mb-3">
+                                    <div class="match-date-time">
+                                        {% set col_date, col_time = convert_to_colombia_time(match.Date, match.Time) %}
+                                        <div class="date-badge">
+                                            <i class="fas fa-calendar-alt mr-1"></i> 
+                                            <span class="date-text">{{ col_date }}</span>
+                                        </div>
+                                        <div class="time-badge">
+                                            <i class="fas fa-clock mr-1"></i> 
+                                            <span class="time-text">{{ col_time }}</span>
+                                            <small class="timezone-text ml-1">(CO)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mb-4 flex-grow-1">
+                                    <div class="team-row d-flex align-items-center justify-content-center mb-3">
+                                        <span class="mr-2" style="display: inline-flex; align-items: center; width: 24px; height: 24px; border-radius: 50%; background: #f8f9fa; border: 1px solid #dee2e6; overflow: hidden; flex-shrink: 0;">
+                                            {% set logo_url = get_team_logo(match.HomeTeam) %}
+                                            {% if logo_url %}
+                                                <img src="{{ logo_url }}" 
+                                                     alt="{{ match.HomeTeam }}" 
+                                                     style="width: 24px !important; height: 24px !important; object-fit: cover !important; display: block !important;"
+                                                     loading="lazy"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            {% endif %}
+                                            <span style="display: none; width: 24px; height: 24px; background: linear-gradient(45deg, #6c757d, #495057); color: white; font-size: 10px; font-weight: bold; align-items: center; justify-content: center; border-radius: 50%;">{{ match.HomeTeam[0] }}</span>
+                                        </span>
+                                        <h5 class="mb-0 text-dark font-weight-bold">{{ match.HomeTeam }}</h5>
+                                    </div>
+                                    <div class="vs-divider">
+                                        <span class="badge badge-light">VS</span>
+                                    </div>
+                                    <div class="team-row d-flex align-items-center justify-content-center mt-3">
+                                        <span class="mr-2" style="display: inline-flex; align-items: center; width: 24px; height: 24px; border-radius: 50%; background: #f8f9fa; border: 1px solid #dee2e6; overflow: hidden; flex-shrink: 0;">
+                                            {% set logo_url = get_team_logo(match.AwayTeam) %}
+                                            {% if logo_url %}
+                                                <img src="{{ logo_url }}" 
+                                                     alt="{{ match.AwayTeam }}" 
+                                                     style="width: 24px !important; height: 24px !important; object-fit: cover !important; display: block !important;"
+                                                     loading="lazy"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            {% endif %}
+                                            <span style="display: none; width: 24px; height: 24px; background: linear-gradient(45deg, #6c757d, #495057); color: white; font-size: 10px; font-weight: bold; align-items: center; justify-content: center; border-radius: 50%;">{{ match.AwayTeam[0] }}</span>
+                                        </span>
+                                        <h5 class="mb-0 text-dark font-weight-bold">{{ match.AwayTeam }}</h5>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <a href="/predict/{{ league }}/{{ loop.index0 }}" class="btn btn-primary btn-sm mr-2">
+                                        <i class="fas fa-chart-line mr-1"></i> Predicciones
+                                    </a>
+                                    <a href="/analysis/{{ league }}/{{ loop.index0 }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-brain mr-1"></i> Análisis IA
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if fixtures|length > 10 %}
+                <div class="text-center mt-5 mb-4">
+                    <div class="section-divider"></div>
+                    <button class="btn btn-show-more btn-lg shadow-lg" id="btn-show-{{ league }}" data-league="{{ league }}">
+                        <i class="fas fa-chevron-down mr-2"></i> 
+                        Ver {{ fixtures|length - 10 }} partidos adicionales
+                        <i class="fas fa-futbol ml-2"></i>
+                    </button>
+                    <div class="btn-info-text">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>{{ fixtures|length - 10 }}</strong> partidos más disponibles
+                    </div>
+                </div>
+                <div id="extra-fixtures-{{ league }}" style="display: none;" class="extra-fixtures-container">
+                    <div class="row">
+                        {% for match in fixtures[10:] %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card prediction-card border-0 shadow-sm h-100 hover-lift">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="text-center mb-3">
+                                        <div class="match-date-time">
+                                            {% set col_date, col_time = convert_to_colombia_time(match.Date, match.Time) %}
+                                            <div class="date-badge">
+                                                <i class="fas fa-calendar-alt mr-1"></i> 
+                                                <span class="date-text">{{ col_date }}</span>
+                                            </div>
+                                            <div class="time-badge">
+                                                <i class="fas fa-clock mr-1"></i> 
+                                                <span class="time-text">{{ col_time }}</span>
+                                                <small class="timezone-text ml-1">(CO)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center mb-4 flex-grow-1">
+                                        <div class="team-row d-flex align-items-center justify-content-center mb-3">
+                                            <div class="team-logo-container mr-2">
+                                                {% set logo_url = get_team_logo(match.HomeTeam) %}
+                                                {% if logo_url %}
+                                                    <img src="{{ logo_url }}" 
+                                                         alt="{{ match.HomeTeam }}" 
+                                                         class="team-logo"
+                                                         loading="lazy"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                {% endif %}
+                                                <div class="team-logo-fallback" {% if not logo_url %}style="display: block;"{% endif %}>{{ match.HomeTeam[0] }}</div>
+                                            </div>
+                                            <h5 class="mb-0 text-dark font-weight-bold">{{ match.HomeTeam }}</h5>
+                                        </div>
+                                        <div class="vs-divider">
+                                            <span class="badge badge-light">VS</span>
+                                        </div>
+                                        <div class="team-row d-flex align-items-center justify-content-center mt-3">
+                                            <div class="team-logo-container mr-2">
+                                                {% set logo_url = get_team_logo(match.AwayTeam) %}
+                                                {% if logo_url %}
+                                                    <img src="{{ logo_url }}" 
+                                                         alt="{{ match.AwayTeam }}" 
+                                                         class="team-logo"
+                                                         loading="lazy"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                {% endif %}
+                                                <div class="team-logo-fallback" {% if not logo_url %}style="display: block;"{% endif %}>{{ match.AwayTeam[0] }}</div>
+                                            </div>
+                                            <h5 class="mb-0 text-dark font-weight-bold">{{ match.AwayTeam }}</h5>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center">
+                                        <a href="/predict/{{ league }}/{{ loop.index + 10 - 1 }}" class="btn btn-primary btn-sm mr-2">
+                                            <i class="fas fa-chart-line mr-1"></i> Predicciones
+                                        </a>
+                                        <a href="/analysis/{{ league }}/{{ loop.index + 10 - 1 }}" class="btn btn-success btn-sm">
+                                            <i class="fas fa-brain mr-1"></i> Análisis IA
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not fixtures_by_league %}
+<div class="row mt-5">
+    <div class="col-12 col-lg-8 mx-auto">
+        <div class="card border-0 shadow-lg">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-futbol text-primary" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="text-dark mb-3">Sincronizando Partidos...</h3>
+                <p class="text-muted mb-4">
+                    El sistema está descargando automáticamente los próximos partidos de todas las ligas principales.
+                </p>
+                <div class="spinner-border text-primary mb-4" role="status">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg mr-3" onclick="location.reload()">
+                        <i class="fas fa-sync mr-2"></i> Recargar Página
+                    </button>
+                    <button class="btn btn-outline-primary btn-lg" onclick="syncFixtures()">
+                        <i class="fas fa-download mr-2"></i> Forzar Descarga
+                    </button>
+                </div>
+                <p class="text-muted mt-3 small">
+                    Si el problema persiste, revisa tu conexión a internet
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Animaciones y efectos visuales */
+.hover-lift {
+    transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15) !important;
+}
+
+.vs-divider {
+    margin: 10px 0;
+    position: relative;
+}
+
+.vs-divider::before,
+.vs-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: #dee2e6;
+}
+
+.vs-divider::before {
+    left: 0;
+}
+
+.vs-divider::after {
+    right: 0;
+}
+
+/* Hero Section */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Badges mejorados */
+.badge-lg {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Animación de carga */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Cards con mejor espaciado */
+.prediction-card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Botones con mejor UX */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Logos ahora usan CSS inline para forzar tamaño */
+
+/* Estilos para fecha y hora del partido */
+.match-date-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-badge {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+.time-badge {
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.date-text, .time-text {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.timezone-text {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+.team-row {
+    transition: all 0.3s ease;
+    gap: 6px;
+    align-items: center;
+}
+
+.team-row:hover {
+    transform: scale(1.02);
+}
+
+.team-row:hover .team-logo {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.team-row h5 {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.1;
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Botón de partidos adicionales mejorado */
+.btn-show-more {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-show-more::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-show-more:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-show-more:hover::before {
+    left: 100%;
+}
+
+.btn-show-more.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Contenedor de partidos adicionales mejorado */
+.extra-fixtures-container {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px dashed rgba(102, 126, 234, 0.3);
+    animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 5000px;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 5000px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+}
+
+.extra-fixtures-container.hiding {
+    animation: slideUp 0.5s ease;
+}
+
+/* Badge de información del botón */
+.btn-info-text {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #6c757d;
+    backdrop-filter: blur(10px);
+}
+
+/* Separador entre secciones */
+.section-divider {
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, rgba(102, 126, 234, 0.1), transparent);
+    margin: 30px 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .jumbotron {
+        padding: 2rem 1rem;
+    }
+    
+    .badge-lg {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn-show-more {
+        font-size: 0.9rem;
+        padding: 10px 24px;
+    }
+    
+    .btn-info-text {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+    
+    .section-divider {
+        height: 30px;
+        margin: 20px 0;
+    }
+    
+    /* Logos responsive - ahora manejado con CSS inline */
+    
+    /* Fecha y hora responsive */
+    .date-badge {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-width: 100px;
+    }
+    
+    .time-badge {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+        min-width: 80px;
+    }
+    
+    .match-date-time {
+        gap: 6px;
+    }
+    
+    .team-row h5 {
+        font-size: 0.85rem;
+    }
+    
+    .team-row {
+        gap: 4px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncFixtures() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    const syncStatus = document.getElementById('sync-status');
+    
+    // Mostrar loading
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+    button.disabled = true;
+    syncStatus.style.display = 'inline-block';
+    
+    // Hacer petición
+    fetch('/sync')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Mostrar éxito
+                button.innerHTML = '<i class="fas fa-check"></i> ¡Sincronizado!';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-success');
+                syncStatus.innerHTML = '<i class="fas fa-check"></i> ¡Completado!';
+                syncStatus.className = 'badge badge-success ml-2';
+                
+                // Recargar página después de 2 segundos
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                // Mostrar error
+                button.innerHTML = '<i class="fas fa-times"></i> Error';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-danger');
+                syncStatus.innerHTML = '<i class="fas fa-times"></i> Error';
+                syncStatus.className = 'badge badge-danger ml-2';
+                
+                // Restaurar después de 3 segundos
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-outline-primary');
+                    button.disabled = false;
+                    syncStatus.style.display = 'none';
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = '<i class="fas fa-times"></i> Error';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-danger');
+            syncStatus.innerHTML = '<i class="fas fa-times"></i> Error';
+            syncStatus.className = 'badge badge-danger ml-2';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('btn-danger');
+                button.classList.add('btn-outline-primary');
+                button.disabled = false;
+                syncStatus.style.display = 'none';
+            }, 3000);
+        });
+}
+
+function toggleFixtures(button) {
+    const league = button.getAttribute('data-league');
+    const extraDiv = document.getElementById(`extra-fixtures-${league}`);
+    
+    console.log('Toggling fixtures for league:', league);
+    console.log('Extra div:', extraDiv);
+    
+    if (!extraDiv) {
+        console.error('No se encontró extra-fixtures-' + league);
+        return;
+    }
+    
+    const isHidden = extraDiv.style.display === 'none' || extraDiv.style.display === '';
+    
+    if (isHidden) {
+        // Mostrar con animación
+        extraDiv.style.display = 'block';
+        extraDiv.classList.remove('hiding');
+        
+        // Actualizar botón
+        button.innerHTML = '<i class="fas fa-chevron-up mr-2"></i> Ocultar partidos adicionales <i class="fas fa-futbol ml-2"></i>';
+        button.classList.add('active');
+        
+        // Scroll suave después de la animación
+        setTimeout(() => {
+            extraDiv.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        }, 300);
+        
+        // Animar las tarjetas una por una
+        const cards = extraDiv.querySelectorAll('.prediction-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+    } else {
+        // Ocultar con animación
+        extraDiv.classList.add('hiding');
+        button.classList.remove('active');
+        
+        setTimeout(() => {
+            extraDiv.style.display = 'none';
+            extraDiv.classList.remove('hiding');
+        }, 500);
+        
+        // Actualizar botón
+        button.innerHTML = '<i class="fas fa-chevron-down mr-2"></i> Ver partidos adicionales <i class="fas fa-futbol ml-2"></i>';
+        
+        // Scroll de vuelta al botón
+        button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// Agregar efectos de hover mejorados
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, inicializando eventos...');
+    
+    // Agregar event listeners a los botones de partidos adicionales
+    const showButtons = document.querySelectorAll('button[id^="btn-show-"]');
+    console.log('Botones de partidos adicionales encontrados:', showButtons.length);
+    
+    showButtons.forEach(btn => {
+        console.log('Agregando event listener a botón:', btn.id);
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Click en botón:', btn.id);
+            toggleFixtures(this);
+        });
+        
+        // Verificar que el div existe
+        const league = btn.getAttribute('data-league');
+        const extraDiv = document.getElementById(`extra-fixtures-${league}`);
+        console.log(`Div extra-fixtures-${league} existe:`, extraDiv !== null);
+        
+        // Agregar efecto hover al botón
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px)';
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    // Efecto de pulso en el botón de sincronización
+    const syncButton = document.querySelector('button[onclick="syncFixtures()"]');
+    if (syncButton) {
+        syncButton.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        
+        syncButton.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    }
+    
+    // Lazy loading para las tarjetas
+    const cards = document.querySelectorAll('.prediction-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Forzar tamaño de logos después de cargar
+    function forceLogoSizes() {
+        const logoImages = document.querySelectorAll('img[src*="logos-world.net"]');
+        logoImages.forEach(img => {
+            img.style.width = '24px';
+            img.style.height = '24px';
+            img.style.maxWidth = '24px';
+            img.style.maxHeight = '24px';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+        });
+    }
+    
+    // Aplicar inmediatamente y después de cargar
+    forceLogoSizes();
+    window.addEventListener('load', forceLogoSizes);
+    
+    // Observar cambios en el DOM
+    const observer = new MutationObserver(forceLogoSizes);
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
+{% endblock %}
+

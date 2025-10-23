@@ -1,0 +1,102 @@
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+from src.models.poisson_dc import DixonColes
+from src.features.ratings import add_elo
+from src.features.rolling import add_form
+from src.utils.odds import market_probs_1x2, implied_probs_from_odds, remove_overround
+from src.backtest.bankroll import kelly_fraction, bet_decision
+from src.backtest.settle import settle_1x2, settle_ou, settle_ah
+
+PROC = Path("data/processed")
+REPORTS = Path("reports"); REPORTS.mkdir(parents=True, exist_ok=True)
+
+def main():
+    df0 = pd.read_parquet(PROC / "matches.parquet")
+    # features antes de split
+    df = add_elo(df0); df = add_form(df)
+    split = df['Date'].quantile(0.7)
+    train = df[df['Date']<=split].copy()
+    test  = df[df['Date']> split].copy()
+
+    dc = DixonColes().fit(train)
+    p1x2 = dc.predict_1x2(test)
+    mkt = test.apply(market_probs_1x2, axis=1, result_type='expand')
+    mkt.columns = ['pH_mkt','pD_mkt','pA_mkt']
+
+    log = []; bankroll = 100.0
+
+    for i, row in test.reset_index(drop=True).iterrows():
+        cands = []
+
+        # 1X2
+        p_row = p1x2.iloc[i][['pH','pD','pA']].to_numpy(float)
+        q_row = mkt.iloc[i][['pH_mkt','pD_mkt','pA_mkt']].to_numpy(float)
+        odds1 = row[['B365H','B365D','B365A']].to_numpy(float)
+        idx = int(np.argmax(p_row - q_row))
+        edge = (p_row - q_row)[idx]
+        if bet_decision(edge, 0.02) and odds1[idx]>1.01:
+            frac = kelly_fraction(p_row[idx], odds1[idx], 0.25)
+            cands.append(dict(market='1X2', selection=['H','D','A'][idx], line=None, odds=float(odds1[idx]), frac=float(frac),
+                              p_model=float(p_row[idx]), p_mkt=float(q_row[idx])))
+
+        # OU 2.5
+        if 'B365>2.5' in row.index and 'B365<2.5' in row.index:
+            probs = dc.prob_over_under(row, line=2.5)
+            p_ou = np.array([probs['pOver'], probs['pUnder']], float)
+            odds_ou = np.array([row['B365>2.5'], row['B365<2.5']], float)
+            q_ou = remove_overround(implied_probs_from_odds(odds_ou))
+            idx2 = int(np.argmax(p_ou - q_ou))
+            edge2 = (p_ou - q_ou)[idx2]
+            if bet_decision(edge2, 0.02) and odds_ou[idx2]>1.01:
+                frac = kelly_fraction(p_ou[idx2], odds_ou[idx2], 0.20)
+                cands.append(dict(market='OU2.5', selection=['Over','Under'][idx2], line=2.5, odds=float(odds_ou[idx2]), frac=float(frac),
+                                  p_model=float(p_ou[idx2]), p_mkt=float(q_ou[idx2])))
+
+        # AH
+        if all(c in row.index for c in ['AHh','B365AHH','B365AHA']):
+            h = float(row['AHh']); oh=float(row['B365AHH']); oa=float(row['B365AHA'])
+            # proxy EV simple con prob win del lado correspondiente
+            ph = dc.ah_probabilities(row, line=h, side='home')['win']
+            pa = dc.ah_probabilities(row, line=h, side='away')['win']
+            ev_h = ph*(oh-1.0) - (1-ph)
+            ev_a = pa*(oa-1.0) - (1-pa)
+            if max(ev_h, ev_a)>0:
+                if ev_h>=ev_a:
+                    p = max(0.51, ph); frac = kelly_fraction(p, oh, 0.15)
+                    cands.append(dict(market='AH', selection='Home', line=h, odds=oh, frac=float(frac), p_model=float(p), p_mkt=float('nan')))
+                else:
+                    p = max(0.51, pa); frac = kelly_fraction(p, oa, 0.15)
+                    cands.append(dict(market='AH', selection='Away', line=h, odds=oa, frac=float(frac), p_model=float(p), p_mkt=float('nan')))
+
+        if not cands:
+            continue
+
+        def key(x):
+            return x['p_model'] - (x['p_mkt'] if isinstance(x['p_mkt'], float) and x['p_mkt']==x['p_mkt'] else 0.5)
+        best = max(cands, key=key)
+
+        stake = bankroll * max(0.0, best['frac'])
+        if stake <= 0: 
+            continue
+
+        if best['market']=='1X2':
+            pnl, res = settle_1x2({'H':0,'D':1,'A':2}[best['selection']], int(row['y']), stake, best['odds'])
+        elif best['market']=='OU2.5':
+            pnl, res = settle_ou(best['selection'], row['FTHG'], row['FTAG'], stake, best['odds'], 2.5)
+        else:
+            pnl, res = settle_ah(best['selection'], best['line'], row['FTHG'], row['FTAG'], stake, best['odds'])
+
+        bankroll += pnl
+        log.append(dict(date=row['Date'], league=row.get('League',''), home=row['HomeTeam'], away=row['AwayTeam'],
+                        market=best['market'], selection=best['selection'], line=best['line'], odds_open=best['odds'],
+                        stake=stake, result=res, pnl=pnl, equity=bankroll, p_model=best['p_model'], p_mkt=best['p_mkt']))
+
+    log_df = pd.DataFrame(log)
+    out = REPORTS / "backtest_log.csv"
+    log_df.to_csv(out, index=False)
+    print("Log:", out, "apuestas:", len(log_df))
+
+if __name__ == "__main__":
+    main()

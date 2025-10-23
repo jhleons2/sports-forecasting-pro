@@ -1,0 +1,26 @@
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.4
+scipy>=1.11
+statsmodels>=0.14
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.2
+tqdm>=4.66
+pyyaml>=6.0
+python-dotenv>=1.0
+pyarrow>=16.0
+
+# ML extra
+xgboost>=2.0
+lightgbm>=4.0
+
+# API + Dashboard
+fastapi>=0.111
+uvicorn>=0.30
+streamlit>=1.36
+flask>=3.0
+pyyaml>=6.0
+pytz>=2023.3
+plotly>=5.20
+matplotlib>=3.8

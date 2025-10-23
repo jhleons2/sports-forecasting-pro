@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header del partido -->
+            <div class="card mb-4">
+                <div class="card-header pb-0 bg-gradient-primary">
+                    <div class="row align-items-center">
+                        <div class="col-5 text-center">
+                            <h2 class="text-white mb-0">{{ match_data.HomeTeam }}</h2>
+                            <p class="text-white-50 mb-0">ELO: {{ match_data.HomeELO }}</p>
+                        </div>
+                        <div class="col-2 text-center">
+                            <h1 class="text-white mb-0">VS</h1>
+                            <p class="text-white-50 mb-0">
+                                <i class="far fa-calendar"></i> {{ match_data.Date }}
+                            </p>
+                        </div>
+                        <div class="col-5 text-center">
+                            <h2 class="text-white mb-0">{{ match_data.AwayTeam }}</h2>
+                            <p class="text-white-50 mb-0">ELO: {{ match_data.AwayELO }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navegación por pestañas -->
+            <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#resultado">
+                        <i class="fas fa-trophy"></i> Resultado
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#goles">
+                        <i class="fas fa-futbol"></i> Goles
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#eventos">
+                        <i class="fas fa-flag"></i> Eventos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#reglas">
+                        <i class="fas fa-cogs"></i> Justificación
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- TAB 1: RESULTADO -->
+                <div class="tab-pane fade show active" id="resultado">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                <i class="fas fa-chart-line text-primary"></i>
+                                Predicción 1X2 - CON TUS 5 REGLAS DINÁMICAS
+                            </h3>
+                            <p class="text-muted mb-0">Calculado dinámicamente desde HOY ({{ fecha_hoy }})</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card stat-card border-left-primary">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-muted">GANA LOCAL</h5>
+                                            <h1 class="display-2 text-primary">{{ "%.1f"|format(predictions['1x2']['home'] * 100) }}%</h1>
+                                            <p class="text-muted">{{ match_data.HomeTeam }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card stat-card border-left-warning">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-muted">EMPATE</h5>
+                                            <h1 class="display-2 text-warning">{{ "%.1f"|format(predictions['1x2']['draw'] * 100) }}%</h1>
+                                            <p class="text-muted">Empate</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card stat-card border-left-danger">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-muted">GANA VISITANTE</h5>
+                                            <h1 class="display-2 text-danger">{{ "%.1f"|format(predictions['1x2']['away'] * 100) }}%</h1>
+                                            <p class="text-muted">{{ match_data.AwayTeam }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- JUSTIFICACIÓN RÁPIDA -->
+                            {% if reglas %}
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <h5 class="alert-heading">
+                                            <i class="fas fa-info-circle"></i>
+                                            ¿Por qué estos porcentajes?
+                                        </h5>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>📊 Forma reciente:</strong><br>
+                                                <small>
+                                                    {{ match_data.HomeTeam }}: {{ reglas.ultimos_8_total.home.pts|default(0) }}/24 pts<br>
+                                                    {{ match_data.AwayTeam }}: {{ reglas.ultimos_8_total.away.pts|default(0) }}/24 pts
+                                                </small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>🏠 Rendimiento local:</strong><br>
+                                                <small>
+                                                    {{ match_data.HomeTeam }} en casa:<br>
+                                                    {{ reglas.ultimos_5_local.gf|default(0) }} GF - {{ reglas.ultimos_5_local.ga|default(0) }} GA<br>
+                                                    Win rate: {{ "%.1f"|format(reglas.ultimos_5_local.win_rate|default(0)) }}%
+                                                </small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>✈️ Rendimiento visitante:</strong><br>
+                                                <small>
+                                                    {{ match_data.AwayTeam }} fuera:<br>
+                                                    {{ reglas.ultimos_5_visitante.gf|default(0) }} GF - {{ reglas.ultimos_5_visitante.ga|default(0) }} GA<br>
+                                                    Win rate: {{ "%.1f"|format(reglas.ultimos_5_visitante.win_rate|default(0)) }}%
+                                                </small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>🔄 H2H:</strong><br>
+                                                <small>
+                                                    {% if reglas.ultimos_5_h2h.partidos > 0 %}
+                                                        {{ reglas.ultimos_5_h2h.home_wins }}W - {{ reglas.ultimos_5_h2h.draws }}D - {{ reglas.ultimos_5_h2h.away_wins }}L<br>
+                                                        ({{ reglas.ultimos_5_h2h.partidos }} partidos)
+                                                    {% else %}
+                                                        Sin enfrentamientos previos
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: GOLES -->
+                <div class="tab-pane fade" id="goles">
+                    <div class="card">
+                        <div class="card-header bg-gradient-warning">
+                            <h3 class="mb-0 text-white">
+                                <i class="fas fa-futbol"></i>
+                                Goles Esperados y Over/Under
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h5 class="text-muted">xG {{ match_data.HomeTeam }}</h5>
+                                            <h1 class="display-3 text-primary">{{ "%.2f"|format(predictions['xg']['home']) }}</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h5 class="text-muted">xG TOTAL</h5>
+                                            <h1 class="display-3 text-info">{{ "%.2f"|format(predictions['xg']['total']) }}</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h5 class="text-muted">xG {{ match_data.AwayTeam }}</h5>
+                                            <h1 class="display-3 text-danger">{{ "%.2f"|format(predictions['xg']['away']) }}</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h5>Over 2.5 Goles</h5>
+                                            <h1 class="display-3">{{ "%.1f"|format(predictions['ou']['over_2_5'] * 100) }}%</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body text-center">
+                                            <h5>Under 2.5 Goles</h5>
+                                            <h1 class="display-3">{{ "%.1f"|format(predictions['ou']['under_2_5'] * 100) }}%</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: EVENTOS -->
+                <div class="tab-pane fade" id="eventos">
+                    <!-- CORNERS -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-gradient-primary">
+                            <h3 class="mb-0 text-white">
+                                <i class="fas fa-flag"></i>
+                                Tiros de Esquina (Corners)
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-4">
+                                <div class="col-4">
+                                    <h6 class="text-muted">{{ match_data.HomeTeam }}</h6>
+                                    <h1 class="display-2 text-primary">{{ predictions['events']['corners']['home'] }}</h1>
+                                    <p class="text-muted">Corners esperados</p>
+                                </div>
+                                <div class="col-4">
+                                    <h6 class="text-muted">TOTAL</h6>
+                                    <h1 class="display-2 text-info">{{ predictions['events']['corners']['total'] }}</h1>
+                                    <p class="text-muted">Corners totales</p>
+                                </div>
+                                <div class="col-4">
+                                    <h6 class="text-muted">{{ match_data.AwayTeam }}</h6>
+                                    <h1 class="display-2 text-danger">{{ predictions['events']['corners']['away'] }}</h1>
+                                    <p class="text-muted">Corners esperados</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Over/Under Corners -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card bg-{% if predictions['events']['corners']['over_9_5'] > 0.5 %}success{% else %}secondary{% endif %}">
+                                        <div class="card-body text-center text-white">
+                                            <h5>Over 9.5</h5>
+                                            <h3>{% if predictions['events']['corners']['over_9_5'] > 0.5 %}SÍ{% else %}NO{% endif %}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-{% if predictions['events']['corners']['over_10_5'] > 0.5 %}success{% else %}secondary{% endif %}">
+                                        <div class="card-body text-center text-white">
+                                            <h5>Over 10.5</h5>
+                                            <h3>{% if predictions['events']['corners']['over_10_5'] > 0.5 %}SÍ{% else %}NO{% endif %}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-{% if predictions['events']['corners']['over_11_5'] > 0.5 %}success{% else %}secondary{% endif %}">
+                                        <div class="card-body text-center text-white">
+                                            <h5>Over 11.5</h5>
+                                            <h3>{% if predictions['events']['corners']['over_11_5'] > 0.5 %}SÍ{% else %}NO{% endif %}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TARJETAS -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-gradient-warning">
+                            <h3 class="mb-0 text-white">
+                                <i class="fas fa-id-card"></i>
+                                Tarjetas Amarillas y Rojas
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-4">
+                                <div class="col-4">
+                                    <h6 class="text-muted">Amarillas</h6>
+                                    <h1 class="display-3 text-warning">{{ predictions['events']['cards']['yellow'] }}</h1>
+                                </div>
+                                <div class="col-4">
+                                    <h6 class="text-muted">Rojas</h6>
+                                    <h1 class="display-3 text-danger">{{ predictions['events']['cards']['red'] }}</h1>
+                                </div>
+                                <div class="col-4">
+                                    <h6 class="text-muted">TOTAL</h6>
+                                    <h1 class="display-3 text-info">{{ predictions['events']['cards']['total'] }}</h1>
+                                </div>
+                            </div>
+                            
+                            <!-- Over/Under Tarjetas -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-{% if predictions['events']['cards']['over_3_5'] > 0.5 %}success{% else %}secondary{% endif %}">
+                                        <div class="card-body text-center text-white">
+                                            <h5>Over 3.5 Tarjetas</h5>
+                                            <h3>{% if predictions['events']['cards']['over_3_5'] > 0.5 %}SÍ{% else %}NO{% endif %}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-{% if predictions['events']['cards']['over_4_5'] > 0.5 %}success{% else %}secondary{% endif %}">
+                                        <div class="card-body text-center text-white">
+                                            <h5>Over 4.5 Tarjetas</h5>
+                                            <h3>{% if predictions['events']['cards']['over_4_5'] > 0.5 %}SÍ{% else %}NO{% endif %}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TIROS -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-gradient-success">
+                            <h3 class="mb-0 text-white">
+                                <i class="fas fa-running"></i>
+                                Tiros Esperados
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="text-primary"><i class="fas fa-home"></i> {{ match_data.HomeTeam }}</h5>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-6">
+                                            <h6 class="text-muted">Tiros Totales</h6>
+                                            <h2 class="text-primary">{{ predictions['events']['shots']['home'] }}</h2>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6 class="text-muted">A Puerta</h6>
+                                            <h2 class="text-success">{{ predictions['events']['shots']['on_target_home'] }}</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="text-danger"><i class="fas fa-plane"></i> {{ match_data.AwayTeam }}</h5>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-6">
+                                            <h6 class="text-muted">Tiros Totales</h6>
+                                            <h2 class="text-danger">{{ predictions['events']['shots']['away'] }}</h2>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6 class="text-muted">A Puerta</h6>
+                                            <h2 class="text-warning">{{ predictions['events']['shots']['on_target_away'] }}</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-12 text-center">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Total de tiros esperados:</strong> {{ predictions['events']['shots']['total'] }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: JUSTIFICACIÓN DETALLADA -->
+                <div class="tab-pane fade" id="reglas">
+                    <div class="card">
+                        <div class="card-header bg-gradient-success">
+                            <h3 class="mb-0 text-white">
+                                <i class="fas fa-cogs"></i>
+                                TUS 5 REGLAS DINÁMICAS - JUSTIFICACIÓN
+                    </h3>
+                    <p class="text-white-50 mb-0">Análisis calculado desde {{ fecha_hoy }}</p>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- REGLA 1: Últimos 8 partidos total -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-left-info">
+                                <div class="card-body">
+                                    <h5 class="text-info">
+                                        <i class="fas fa-chart-bar"></i>
+                                        REGLA 1: Últimos 8 partidos total (misma liga)
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.HomeTeam }}</h6>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Puntos</small>
+                                                    <h4 class="text-primary">{{ reglas.ultimos_8_total.home.pts }}/24</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Efectividad</small>
+                                                    <h4 class="text-info">{{ "%.1f"|format(reglas.ultimos_8_total.home.efectividad | default(0)) }}%</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GD</small>
+                                                    <h4 class="text-{% if reglas.ultimos_8_total.home.gd > 0 %}success{% elif reglas.ultimos_8_total.home.gd < 0 %}danger{% else %}secondary{% endif %}">
+                                                        {% if reglas.ultimos_8_total.home.gd > 0 %}+{% endif %}{{ reglas.ultimos_8_total.home.gd }}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.AwayTeam }}</h6>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Puntos</small>
+                                                    <h4 class="text-primary">{{ reglas.ultimos_8_total.away.pts }}/24</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Efectividad</small>
+                                                    <h4 class="text-info">{{ "%.1f"|format(reglas.ultimos_8_total.away.efectividad | default(0)) }}%</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GD</small>
+                                                    <h4 class="text-{% if reglas.ultimos_8_total.away.gd > 0 %}success{% elif reglas.ultimos_8_total.away.gd < 0 %}danger{% else %}secondary{% endif %}">
+                                                        {% if reglas.ultimos_8_total.away.gd > 0 %}+{% endif %}{{ reglas.ultimos_8_total.away.gd }}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-2 mb-0">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Análisis:</strong>
+                                        {% if reglas.ultimos_8_total.home.pts > reglas.ultimos_8_total.away.pts %}
+                                            {{ match_data.HomeTeam }} tiene mejor forma ({{ reglas.ultimos_8_total.home.pts }} vs {{ reglas.ultimos_8_total.away.pts }} pts)
+                                        {% elif reglas.ultimos_8_total.home.pts < reglas.ultimos_8_total.away.pts %}
+                                            {{ match_data.AwayTeam }} tiene mejor forma ({{ reglas.ultimos_8_total.away.pts }} vs {{ reglas.ultimos_8_total.home.pts }} pts)
+                                        {% else %}
+                                            Ambos equipos tienen forma similar ({{ reglas.ultimos_8_total.home.pts }} pts cada uno)
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGLA 2: Últimos 5 como local -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-left-success">
+                                <div class="card-body">
+                                    <h5 class="text-success">
+                                        <i class="fas fa-home"></i>
+                                        REGLA 2: Últimos 5 como local (misma liga)
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.HomeTeam }} en casa</h6>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <small class="text-muted">GF</small>
+                                                    <h4 class="text-success">{{ reglas.ultimos_5_local.gf }}</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GC</small>
+                                                    <h4 class="text-danger">{{ reglas.ultimos_5_local.ga }}</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GD</small>
+                                                    <h4 class="text-{% if reglas.ultimos_5_local.gd > 0 %}success{% elif reglas.ultimos_5_local.gd < 0 %}danger{% else %}secondary{% endif %}">
+                                                        {% if reglas.ultimos_5_local.gd > 0 %}+{% endif %}{{ reglas.ultimos_5_local.gd }}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-12">
+                                                    <small class="text-muted">Win Rate</small>
+                                                    <h5 class="text-success">{{ "%.1f"|format(reglas.ultimos_5_local.win_rate) }}%</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="alert alert-light">
+                                                <h6 class="text-muted">Rendimiento en casa</h6>
+                                                <p class="mb-0">
+                                                    {% if reglas.ultimos_5_local.win_rate >= 60 %}
+                                                        <span class="badge badge-success">MUY FUERTE</span> en casa
+                                                    {% elif reglas.ultimos_5_local.win_rate >= 40 %}
+                                                        <span class="badge badge-warning">REGULAR</span> en casa
+                                                    {% else %}
+                                                        <span class="badge badge-danger">DÉBIL</span> en casa
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGLA 3: Últimos 5 como visitante -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-left-warning">
+                                <div class="card-body">
+                                    <h5 class="text-warning">
+                                        <i class="fas fa-plane"></i>
+                                        REGLA 3: Últimos 5 como visitante (misma liga)
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.AwayTeam }} fuera</h6>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <small class="text-muted">GF</small>
+                                                    <h4 class="text-success">{{ reglas.ultimos_5_visitante.gf }}</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GC</small>
+                                                    <h4 class="text-danger">{{ reglas.ultimos_5_visitante.ga }}</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">GD</small>
+                                                    <h4 class="text-{% if reglas.ultimos_5_visitante.gd > 0 %}success{% elif reglas.ultimos_5_visitante.gd < 0 %}danger{% else %}secondary{% endif %}">
+                                                        {% if reglas.ultimos_5_visitante.gd > 0 %}+{% endif %}{{ reglas.ultimos_5_visitante.gd }}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-12">
+                                                    <small class="text-muted">Win Rate</small>
+                                                    <h5 class="text-warning">{{ "%.1f"|format(reglas.ultimos_5_visitante.win_rate) }}%</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="alert alert-light">
+                                                <h6 class="text-muted">Rendimiento fuera</h6>
+                                                <p class="mb-0">
+                                                    {% if reglas.ultimos_5_visitante.win_rate >= 60 %}
+                                                        <span class="badge badge-success">MUY FUERTE</span> fuera
+                                                    {% elif reglas.ultimos_5_visitante.win_rate >= 40 %}
+                                                        <span class="badge badge-warning">REGULAR</span> fuera
+                                                    {% else %}
+                                                        <span class="badge badge-danger">DÉBIL</span> fuera
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGLA 4: H2H -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-left-primary">
+                                <div class="card-body">
+                                    <h5 class="text-primary">
+                                        <i class="fas fa-handshake"></i>
+                                        REGLA 4: Últimos 5 entre sí (H2H)
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">Enfrentamientos directos</h6>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Partidos</small>
+                                                    <h4 class="text-primary">{{ reglas.ultimos_5_h2h.partidos }}</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">{{ match_data.HomeTeam }}</small>
+                                                    <h4 class="text-success">{{ reglas.ultimos_5_h2h.home_wins }}W</h4>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">{{ match_data.AwayTeam }}</small>
+                                                    <h4 class="text-danger">{{ reglas.ultimos_5_h2h.away_wins }}W</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="alert alert-light">
+                                                <h6 class="text-muted">Dominancia</h6>
+                                                <p class="mb-0">
+                                                    {% if reglas.ultimos_5_h2h.partidos == 0 %}
+                                                        <span class="badge badge-secondary">Sin historial</span> reciente
+                                                    {% elif reglas.ultimos_5_h2h.dominancia > 0.2 %}
+                                                        <span class="badge badge-success">{{ match_data.HomeTeam }}</span> domina
+                                                    {% elif reglas.ultimos_5_h2h.dominancia < -0.2 %}
+                                                        <span class="badge badge-danger">{{ match_data.AwayTeam }}</span> domina
+                                                    {% else %}
+                                                        <span class="badge badge-warning">Equilibrado</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGLA 5: Bajas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-left-danger">
+                                <div class="card-body">
+                                    <h5 class="text-danger">
+                                        <i class="fas fa-user-times"></i>
+                                        REGLA 5: Bajas de jugadores (Datos en tiempo real)
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.HomeTeam }}</h6>
+                                            <h4 class="text-danger">{{ reglas.bajas_jugadores.home_bajas }} lesiones</h4>
+                                            <p class="text-muted">Impacto: {{ "%.1f"|format(reglas.bajas_jugadores.home_impacto * 100) }}%</p>
+                                            
+                                            {% if reglas.bajas_jugadores.home_lesiones_detalle %}
+                                            <div class="mt-3">
+                                                <h6 class="text-muted">Jugadores lesionados:</h6>
+                                                {% for lesion in reglas.bajas_jugadores.home_lesiones_detalle %}
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="small">{{ lesion.nombre_completo }} ({{ lesion.posicion }})</span>
+                                                    <span class="badge badge-{% if lesion.status == 'i' %}danger{% else %}warning{% endif %}">
+                                                        {{ lesion.status_text }}
+                                                    </span>
+                                                </div>
+                                                {% if lesion.news %}
+                                                <p class="small text-muted mb-2">{{ lesion.news }}</p>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted">{{ match_data.AwayTeam }}</h6>
+                                            <h4 class="text-danger">{{ reglas.bajas_jugadores.away_bajas }} lesiones</h4>
+                                            <p class="text-muted">Impacto: {{ "%.1f"|format(reglas.bajas_jugadores.away_impacto * 100) }}%</p>
+                                            
+                                            {% if reglas.bajas_jugadores.away_lesiones_detalle %}
+                                            <div class="mt-3">
+                                                <h6 class="text-muted">Jugadores lesionados:</h6>
+                                                {% for lesion in reglas.bajas_jugadores.away_lesiones_detalle %}
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="small">{{ lesion.nombre_completo }} ({{ lesion.posicion }})</span>
+                                                    <span class="badge badge-{% if lesion.status == 'i' %}danger{% else %}warning{% endif %}">
+                                                        {{ lesion.status_text }}
+                                                    </span>
+                                                </div>
+                                                {% if lesion.news %}
+                                                <p class="small text-muted mb-2">{{ lesion.news }}</p>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if reglas.bajas_jugadores.home_bajas == 0 and reglas.bajas_jugadores.away_bajas == 0 %}
+                                    <div class="alert alert-success mt-3">
+                                        <i class="fas fa-check-circle"></i>
+                                        <strong>Sin lesiones importantes:</strong> Ambos equipos están en condiciones óptimas.
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Datos en tiempo real:</strong> Información actualizada desde Fantasy Premier League API.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RESUMEN FINAL -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-gradient-dark">
+                                <div class="card-body">
+                                    <h5 class="text-white">
+                                        <i class="fas fa-lightbulb"></i>
+                                        CONCLUSIÓN BASADA EN TUS 5 REGLAS
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-4 text-center">
+                                            <h6 class="text-white-50">Favorito</h6>
+                                            {% if predictions['1x2']['home'] > predictions['1x2']['away'] %}
+                                                <h3 class="text-success">{{ match_data.HomeTeam }}</h3>
+                                                <p class="text-white-50">{{ "%.1f"|format(predictions['1x2']['home'] * 100) }}%</p>
+                                            {% elif predictions['1x2']['away'] > predictions['1x2']['home'] %}
+                                                <h3 class="text-danger">{{ match_data.AwayTeam }}</h3>
+                                                <p class="text-white-50">{{ "%.1f"|format(predictions['1x2']['away'] * 100) }}%</p>
+                                            {% else %}
+                                                <h3 class="text-warning">Equilibrado</h3>
+                                                <p class="text-white-50">Partido muy parejo</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <h6 class="text-white-50">Probabilidad Empate</h6>
+                                            <h3 class="text-warning">{{ "%.1f"|format(predictions['1x2']['draw'] * 100) }}%</h3>
+                                            {% if predictions['1x2']['draw'] > 0.35 %}
+                                                <p class="text-white-50">Alta probabilidad</p>
+                                            {% elif predictions['1x2']['draw'] > 0.25 %}
+                                                <p class="text-white-50">Probabilidad media</p>
+                                            {% else %}
+                                                <p class="text-white-50">Baja probabilidad</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <h6 class="text-white-50">Confianza</h6>
+                                            {% set max_prob = [predictions['1x2']['home'], predictions['1x2']['draw'], predictions['1x2']['away']] | max %}
+                                            {% if max_prob > 0.5 %}
+                                                <h3 class="text-success">ALTA</h3>
+                                                <p class="text-white-50">Predicción clara</p>
+                                            {% elif max_prob > 0.4 %}
+                                                <h3 class="text-warning">MEDIA</h3>
+                                                <p class="text-white-50">Partido equilibrado</p>
+                                            {% else %}
+                                                <h3 class="text-danger">BAJA</h3>
+                                                <p class="text-white-50">Muy impredecible</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Cierre del tab-content -->
+        </div>
+
+        <!-- Botón volver -->
+        <div class="row mt-4">
+            <div class="col text-center">
+                <a href="/" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Volver a Fixtures
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+{% endblock %}

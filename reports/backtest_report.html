@@ -1,0 +1,181 @@
+
+    <html><head><meta charset='utf-8'><title>Backtest Report</title>
+      <style>body{font-family:Arial;margin:24px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:6px;text-align:right} th{background:#f4f4f4}</style>
+    </head><body>
+      <h1>Backtest Report</h1>
+      <p>Apuestas: 453 | Turnover: 5366.00 | PnL: 1854.93 | ROI: 34.57% | Hit-rate: 45.92% | Max DD: -213.16 (-13.46%)</p>
+      <h2>Curva de equity</h2>
+      <img src="equity.png" style="max-width:100%"/>
+      <h2>ROI mensual</h2>
+      <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>date</th>
+      <th>turnover</th>
+      <th>pnl</th>
+      <th>bets</th>
+      <th>roi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2025-04</td>
+      <td>207.118497</td>
+      <td>159.221784</td>
+      <td>77</td>
+      <td>0.768747</td>
+    </tr>
+    <tr>
+      <td>2025-05</td>
+      <td>828.939936</td>
+      <td>214.772679</td>
+      <td>147</td>
+      <td>0.259093</td>
+    </tr>
+    <tr>
+      <td>2025-08</td>
+      <td>938.258671</td>
+      <td>566.481289</td>
+      <td>84</td>
+      <td>0.603758</td>
+    </tr>
+    <tr>
+      <td>2025-09</td>
+      <td>2395.353766</td>
+      <td>600.230609</td>
+      <td>109</td>
+      <td>0.250581</td>
+    </tr>
+    <tr>
+      <td>2025-10</td>
+      <td>996.332849</td>
+      <td>314.225418</td>
+      <td>36</td>
+      <td>0.315382</td>
+    </tr>
+  </tbody>
+</table>
+      <h2>KPIs por mercado</h2>
+      <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>market</th>
+      <th>turnover</th>
+      <th>pnl</th>
+      <th>bets</th>
+      <th>roi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1X2</td>
+      <td>4004.816591</td>
+      <td>1242.106461</td>
+      <td>267</td>
+      <td>0.310153</td>
+    </tr>
+    <tr>
+      <td>AH</td>
+      <td>803.475961</td>
+      <td>599.688054</td>
+      <td>67</td>
+      <td>0.746367</td>
+    </tr>
+    <tr>
+      <td>OU2.5</td>
+      <td>557.711166</td>
+      <td>13.137263</td>
+      <td>119</td>
+      <td>0.023556</td>
+    </tr>
+  </tbody>
+</table>
+      <h2>ROI por banda de cuota y mercado</h2>
+      <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>market</th>
+      <th>odds_band</th>
+      <th>turnover</th>
+      <th>pnl</th>
+      <th>bets</th>
+      <th>roi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1X2</td>
+      <td>2.0–2.99</td>
+      <td>1154.054869</td>
+      <td>681.594186</td>
+      <td>78</td>
+      <td>0.590608</td>
+    </tr>
+    <tr>
+      <td>1X2</td>
+      <td>3.0–4.99</td>
+      <td>2680.817378</td>
+      <td>342.598156</td>
+      <td>174</td>
+      <td>0.127796</td>
+    </tr>
+    <tr>
+      <td>1X2</td>
+      <td>&gt;=5.0</td>
+      <td>169.944344</td>
+      <td>217.914120</td>
+      <td>15</td>
+      <td>1.282268</td>
+    </tr>
+    <tr>
+      <td>AH</td>
+      <td>2.0–2.99</td>
+      <td>11.688392</td>
+      <td>11.688392</td>
+      <td>3</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <td>AH</td>
+      <td>&lt;2.0</td>
+      <td>791.787569</td>
+      <td>587.999662</td>
+      <td>64</td>
+      <td>0.742623</td>
+    </tr>
+    <tr>
+      <td>OU2.5</td>
+      <td>2.0–2.99</td>
+      <td>385.632870</td>
+      <td>-25.858642</td>
+      <td>86</td>
+      <td>-0.067055</td>
+    </tr>
+    <tr>
+      <td>OU2.5</td>
+      <td>3.0–4.99</td>
+      <td>150.580576</td>
+      <td>36.314294</td>
+      <td>27</td>
+      <td>0.241162</td>
+    </tr>
+    <tr>
+      <td>OU2.5</td>
+      <td>&lt;2.0</td>
+      <td>14.820761</td>
+      <td>-1.719584</td>
+      <td>4</td>
+      <td>-0.116025</td>
+    </tr>
+    <tr>
+      <td>OU2.5</td>
+      <td>&gt;=5.0</td>
+      <td>6.676960</td>
+      <td>4.401194</td>
+      <td>2</td>
+      <td>0.659161</td>
+    </tr>
+  </tbody>
+</table>
+    </body></html>
+    

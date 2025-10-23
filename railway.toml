@@ -1,0 +1,18 @@
+# Railway Configuration
+# Este archivo configura el proyecto para Railway
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "python app_argon_con_reglas.py"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[env]
+PORT = 5000
+FLASK_ENV = "production"
+FLASK_DEBUG = "False"
+PYTHONPATH = "."

@@ -1,0 +1,21 @@
+date,matchday,home_team,away_team,competition,competition_code,match_id
+2025-10-24 19:00:00+00:00,9,Leeds United FC,West Ham United FC,Premier League,PL,537871
+2025-10-25 14:00:00+00:00,9,Chelsea FC,Sunderland AFC,Premier League,PL,537869
+2025-10-25 14:00:00+00:00,9,Newcastle United FC,Fulham FC,Premier League,PL,537873
+2025-10-25 16:30:00+00:00,9,Manchester United FC,Brighton & Hove Albion FC,Premier League,PL,537872
+2025-10-25 19:00:00+00:00,9,Brentford FC,Liverpool FC,Premier League,PL,537868
+2025-10-26 14:00:00+00:00,9,AFC Bournemouth,Nottingham Forest FC,Premier League,PL,537865
+2025-10-26 14:00:00+00:00,9,Aston Villa FC,Manchester City FC,Premier League,PL,537866
+2025-10-26 14:00:00+00:00,9,Arsenal FC,Crystal Palace FC,Premier League,PL,537867
+2025-10-26 14:00:00+00:00,9,Wolverhampton Wanderers FC,Burnley FC,Premier League,PL,537874
+2025-10-26 16:30:00+00:00,9,Everton FC,Tottenham Hotspur FC,Premier League,PL,537870
+2025-11-01 15:00:00+00:00,10,Brighton & Hove Albion FC,Leeds United FC,Premier League,PL,537876
+2025-11-01 15:00:00+00:00,10,Crystal Palace FC,Brentford FC,Premier League,PL,537877
+2025-11-01 15:00:00+00:00,10,Burnley FC,Arsenal FC,Premier League,PL,537878
+2025-11-01 15:00:00+00:00,10,Fulham FC,Wolverhampton Wanderers FC,Premier League,PL,537879
+2025-11-01 15:00:00+00:00,10,Nottingham Forest FC,Manchester United FC,Premier League,PL,537882
+2025-11-01 17:30:00+00:00,10,Tottenham Hotspur FC,Chelsea FC,Premier League,PL,537883
+2025-11-01 20:00:00+00:00,10,Liverpool FC,Aston Villa FC,Premier League,PL,537880
+2025-11-02 14:00:00+00:00,10,West Ham United FC,Newcastle United FC,Premier League,PL,537884
+2025-11-02 16:30:00+00:00,10,Manchester City FC,AFC Bournemouth,Premier League,PL,537881
+2025-11-03 20:00:00+00:00,10,Sunderland AFC,Everton FC,Premier League,PL,537875

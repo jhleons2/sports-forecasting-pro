@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="row">
+                        <div class="col-lg-6 col-7">
+                            <h3>{{ match_data.HomeTeam }} vs {{ match_data.AwayTeam }}</h3>
+                            <p class="text-sm mb-0">
+                                <i class="fa fa-trophy text-warning" aria-hidden="true"></i>
+                                <span class="font-weight-bold">{{ match_data.League }}</span>
+                            </p>
+                        </div>
+                        <div class="col-lg-6 col-5 my-auto text-end">
+                            <span class="badge badge-sm bg-gradient-success">CON TUS 5 REGLAS</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PREDICCIÓN -->
+                <div class="card-body px-4 pb-2">
+                    <h5 class="text-uppercase text-sm">Predicción (basada en tus reglas)</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6>{{ match_data.HomeTeam }}</h6>
+                                <h2 class="text-primary">{{ "%.1f"|format(predictions['1x2']['home'] * 100) }}%</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6>Empate</h6>
+                                <h2 class="text-secondary">{{ "%.1f"|format(predictions['1x2']['draw'] * 100) }}%</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6>{{ match_data.AwayTeam }}</h6>
+                                <h2 class="text-danger">{{ "%.1f"|format(predictions['1x2']['away'] * 100) }}%</h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Goles Esperados -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <h6 class="text-sm">Goles Esperados</h6>
+                            <p class="text-sm">
+                                {{ match_data.HomeTeam }}: <strong>{{ "%.2f"|format(predictions['xg']['home']) }}</strong> |
+                                {{ match_data.AwayTeam }}: <strong>{{ "%.2f"|format(predictions['xg']['away']) }}</strong> |
+                                Total: <strong>{{ "%.2f"|format(predictions['xg']['total']) }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Over/Under -->
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <p class="text-sm mb-0">Over 2.5: <strong>{{ "%.1f"|format(predictions['ou']['over_2_5'] * 100) }}%</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-sm mb-0">Under 2.5: <strong>{{ "%.1f"|format(predictions['ou']['under_2_5'] * 100) }}%</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TUS 5 REGLAS -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h4>📊 ANÁLISIS CON TUS 5 REGLAS</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- REGLA 1: Últimos 8 -->
+                    <div class="mb-4 p-3 bg-gradient-light rounded">
+                        <h6 class="text-uppercase">
+                            <i class="fas fa-chart-line me-2"></i>
+                            REGLA 1: Últimos 8 Partidos Total (Misma Liga)
+                        </h6>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="text-primary">{{ match_data.HomeTeam }}</h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td>Goles a favor:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.home.gf|int }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Goles en contra:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.home.ga|int }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Diferencia:</td>
+                                                <td class="text-end"><strong class="{% if analisis.ultimos_8_total.home.gd > 0 %}text-success{% elif analisis.ultimos_8_total.home.gd < 0 %}text-danger{% endif %}">{{ "%+d"|format(analisis.ultimos_8_total.home.gd|int) }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Puntos:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.home.pts|int }}/24</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Efectividad:</td>
+                                                <td class="text-end"><strong>{{ "%.0f"|format((analisis.ultimos_8_total.home.pts / 24) * 100) }}%</strong></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="text-danger">{{ match_data.AwayTeam }}</h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td>Goles a favor:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.away.gf|int }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Goles en contra:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.away.ga|int }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Diferencia:</td>
+                                                <td class="text-end"><strong class="{% if analisis.ultimos_8_total.away.gd > 0 %}text-success{% elif analisis.ultimos_8_total.away.gd < 0 %}text-danger{% endif %}">{{ "%+d"|format(analisis.ultimos_8_total.away.gd|int) }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Puntos:</td>
+                                                <td class="text-end"><strong>{{ analisis.ultimos_8_total.away.pts|int }}/24</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Efectividad:</td>
+                                                <td class="text-end"><strong>{{ "%.0f"|format((analisis.ultimos_8_total.away.pts / 24) * 100) }}%</strong></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- REGLA 2: Últimos 5 Local -->
+                    <div class="mb-4 p-3 bg-gradient-light rounded">
+                        <h6 class="text-uppercase">
+                            <i class="fas fa-home me-2"></i>
+                            REGLA 2: Últimos 5 Como Local (Misma Liga)
+                        </h6>
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="text-primary">{{ match_data.HomeTeam }}</h6>
+                                <p class="text-sm mb-1">
+                                    Goles a favor: <strong>{{ analisis.ultimos_5_local.gf|int }}</strong> |
+                                    Goles en contra: <strong>{{ analisis.ultimos_5_local.ga|int }}</strong> |
+                                    Diferencia: <strong class="{% if analisis.ultimos_5_local.gd > 0 %}text-success{% elif analisis.ultimos_5_local.gd < 0 %}text-danger{% endif %}">{{ "%+d"|format(analisis.ultimos_5_local.gd|int) }}</strong>
+                                </p>
+                                {% if analisis.ultimos_5_local.gd > 5 %}
+                                <span class="badge badge-sm bg-gradient-success">Fortaleza en casa</span>
+                                {% elif analisis.ultimos_5_local.gd < -3 %}
+                                <span class="badge badge-sm bg-gradient-danger">Débil en casa</span>
+                                {% else %}
+                                <span class="badge badge-sm bg-gradient-secondary">Normal en casa</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- REGLA 3: Últimos 5 Visitante -->
+                    <div class="mb-4 p-3 bg-gradient-light rounded">
+                        <h6 class="text-uppercase">
+                            <i class="fas fa-plane me-2"></i>
+                            REGLA 3: Últimos 5 Como Visitante (Misma Liga)
+                        </h6>
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="text-danger">{{ match_data.AwayTeam }}</h6>
+                                <p class="text-sm mb-1">
+                                    Goles a favor: <strong>{{ analisis.ultimos_5_visitante.gf|int }}</strong> |
+                                    Goles en contra: <strong>{{ analisis.ultimos_5_visitante.ga|int }}</strong> |
+                                    Diferencia: <strong class="{% if analisis.ultimos_5_visitante.gd > 0 %}text-success{% elif analisis.ultimos_5_visitante.gd < 0 %}text-danger{% endif %}">{{ "%+d"|format(analisis.ultimos_5_visitante.gd|int) }}</strong>
+                                </p>
+                                {% if analisis.ultimos_5_visitante.gd > 3 %}
+                                <span class="badge badge-sm bg-gradient-success">Fuerte fuera de casa</span>
+                                {% elif analisis.ultimos_5_visitante.gd < -3 %}
+                                <span class="badge badge-sm bg-gradient-danger">Débil fuera</span>
+                                {% else %}
+                                <span class="badge badge-sm bg-gradient-secondary">Normal fuera</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- REGLA 4: H2H -->
+                    <div class="mb-4 p-3 bg-gradient-light rounded">
+                        <h6 class="text-uppercase">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            REGLA 4: Últimos 5 Enfrentamientos Directos (H2H)
+                        </h6>
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                {% if analisis.ultimos_5_h2h.partidos > 0 %}
+                                <p class="text-sm mb-2">
+                                    <strong>Partidos encontrados:</strong> {{ analisis.ultimos_5_h2h.partidos|int }}
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <p class="text-sm mb-0">Victorias {{ match_data.HomeTeam }}</p>
+                                        <h4 class="text-primary">{{ analisis.ultimos_5_h2h.home_wins|int }}</h4>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <p class="text-sm mb-0">Empates</p>
+                                        <h4 class="text-secondary">{{ analisis.ultimos_5_h2h.draws|int }}</h4>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <p class="text-sm mb-0">Victorias {{ match_data.AwayTeam }}</p>
+                                        <h4 class="text-danger">{{ analisis.ultimos_5_h2h.away_wins|int }}</h4>
+                                    </div>
+                                </div>
+                                <hr>
+                                <p class="text-sm mb-1">
+                                    <strong>Goles promedio en H2H:</strong>
+                                </p>
+                                <p class="text-sm">
+                                    {{ match_data.HomeTeam }}: {{ "%.1f"|format(analisis.ultimos_5_h2h.home_goals_avg) }} |
+                                    {{ match_data.AwayTeam }}: {{ "%.1f"|format(analisis.ultimos_5_h2h.away_goals_avg) }} |
+                                    Total: {{ "%.1f"|format(analisis.ultimos_5_h2h.total_goals_avg) }}
+                                </p>
+                                {% else %}
+                                <p class="text-sm text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No hay enfrentamientos directos recientes entre estos equipos
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- REGLA 5: Bajas -->
+                    <div class="mb-4 p-3 bg-gradient-light rounded">
+                        <h6 class="text-uppercase">
+                            <i class="fas fa-user-injured me-2"></i>
+                            REGLA 5: Bajas de Jugadores
+                        </h6>
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="text-sm mb-1"><strong>{{ match_data.HomeTeam }}:</strong></p>
+                                        <p class="text-sm">
+                                            Jugadores clave bajas: {{ analisis.bajas_jugadores.home_bajas|int }} |
+                                            Suspendidos: {{ analisis.bajas_jugadores.home_suspendidos|int }}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="text-sm mb-1"><strong>{{ match_data.AwayTeam }}:</strong></p>
+                                        <p class="text-sm">
+                                            Jugadores clave bajas: {{ analisis.bajas_jugadores.away_bajas|int }} |
+                                            Suspendidos: {{ analisis.bajas_jugadores.away_suspendidos|int }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mt-2">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <small>Para datos reales de lesiones, integrar API-FOOTBALL /injuries</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,4 @@
+strategy_name,total_bets,win_rate,total_profit,roi,max_drawdown,sharpe_ratio,avg_stake,profit_factor,final_bankroll
+Conservadora,30.7,0.6335399154891614,0.0,0.0,0.0,0.0,0.0,inf,10000.0
+Moderada,55.8,0.6009401139120791,0.0,0.0,0.0,0.0,0.0,inf,10000.0
+Agresiva,88.0,0.5891790896638788,0.0,0.0,0.0,0.0,0.0,inf,10000.0
