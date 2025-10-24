@@ -6,11 +6,9 @@ startCommand = "python main.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 
-[build.env]
-PIP_REQUIREMENTS_FILE = "requirements-railway.txt"
-
 [env]
 PORT = 8080
 FLASK_ENV = "production"
 FLASK_DEBUG = "False"
 SECRET_KEY = "sistema_precision_maxima_2025"
+FOOTBALL_API_KEY = "2b1693b0c9ba4a99bf8346cd0a9d27d0"
