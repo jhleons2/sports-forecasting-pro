@@ -282,7 +282,7 @@ def analysis(league, match_index):
 
 @app.route('/debug')
 def debug():
-    """Endpoint de diagnóstico para verificar el estado de la API"""
+    """Endpoint de diagnóstico para verificar el estado de la API - V2"""
     try:
         debug_info = {
             'api_available': real_api is not None,
@@ -530,7 +530,17 @@ def health_check():
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
         'model_accuracy': f"{MODEL_ACCURACY:.1f}%",
-        'system': 'Sistema de Precisión Máxima'
+        'system': 'Sistema de Precisión Máxima',
+        'version': '2.0'
+    }, 200
+
+@app.route('/test')
+def test():
+    """Endpoint de prueba simple"""
+    return {
+        'message': 'Sistema funcionando correctamente',
+        'timestamp': datetime.now().isoformat(),
+        'api_status': 'OK' if real_api else 'Not Available'
     }, 200
 
 @app.route('/status')
