@@ -291,78 +291,9 @@ def get_upcoming_fixtures():
         return _get_fallback_fixtures()
 
 def _get_fallback_fixtures():
-    """Datos de fallback realistas"""
-    from datetime import timedelta
-    today = datetime.now().date()
-    
-    return [
-        # Premier League - Partidos reales próximos
-        {
-            'HomeTeam': 'Arsenal',
-            'AwayTeam': 'Chelsea',
-            'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
-            'Time': '15:00',
-            'League': 'E0',
-            'Competition': 'Premier League',
-            'Status': 'SCHEDULED'
-        },
-        {
-            'HomeTeam': 'Liverpool',
-            'AwayTeam': 'Brighton',
-            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
-            'Time': '17:30',
-            'League': 'E0',
-            'Competition': 'Premier League',
-            'Status': 'SCHEDULED'
-        },
-        {
-            'HomeTeam': 'Manchester City',
-            'AwayTeam': 'Newcastle',
-            'Date': (today + timedelta(days=3)).strftime('%Y-%m-%d'),
-            'Time': '14:00',
-            'League': 'E0',
-            'Competition': 'Premier League',
-            'Status': 'SCHEDULED'
-        },
-        # La Liga - Partidos reales próximos
-        {
-            'HomeTeam': 'Real Madrid',
-            'AwayTeam': 'Barcelona',
-            'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
-            'Time': '16:00',
-            'League': 'SP1',
-            'Competition': 'La Liga',
-            'Status': 'SCHEDULED'
-        },
-        {
-            'HomeTeam': 'Atletico Madrid',
-            'AwayTeam': 'Sevilla',
-            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
-            'Time': '18:30',
-            'League': 'SP1',
-            'Competition': 'La Liga',
-            'Status': 'SCHEDULED'
-        },
-        # Bundesliga - Partidos reales próximos
-        {
-            'HomeTeam': 'Bayern Munich',
-            'AwayTeam': 'Borussia Dortmund',
-            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
-            'Time': '17:30',
-            'League': 'D1',
-            'Competition': 'Bundesliga',
-            'Status': 'SCHEDULED'
-        },
-        {
-            'HomeTeam': 'RB Leipzig',
-            'AwayTeam': 'Bayer Leverkusen',
-            'Date': (today + timedelta(days=3)).strftime('%Y-%m-%d'),
-            'Time': '15:30',
-            'League': 'D1',
-            'Competition': 'Bundesliga',
-            'Status': 'SCHEDULED'
-        }
-    ]
+    """NO HAY DATOS DE FALLBACK - Solo datos reales"""
+    print("❌ NO SE PERMITEN DATOS FICTICIOS - Solo datos reales")
+    return []
 
 @app.route('/alerts')
 def alerts():

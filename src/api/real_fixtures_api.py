@@ -2,154 +2,290 @@ import requests
 import json
 from datetime import datetime, timedelta
 import time
+import os
 
 class RealFixturesAPI:
-    """API para obtener partidos reales de fútbol"""
+    """API para obtener partidos reales de fútbol usando únicamente datos reales"""
     
     def __init__(self):
+        # Usar API gratuita de Football-Data.org (tier gratuito: 10 requests/min)
+        self.api_key = os.environ.get('FOOTBALL_API_KEY', '')  # Configurar en Railway
         self.base_url = "https://api.football-data.org/v4"
         self.headers = {
-            'X-Auth-Token': 'YOUR_API_KEY',  # Necesitarás una API key gratuita
+            'X-Auth-Token': self.api_key,
             'Content-Type': 'application/json'
         }
         
+        # IDs de las principales ligas europeas
+        self.league_ids = {
+            'E0': 2021,  # Premier League
+            'SP1': 2014, # La Liga
+            'D1': 2002,  # Bundesliga
+            'I1': 2019,  # Serie A
+            'F1': 2015   # Ligue 1
+        }
+        
     def get_upcoming_matches(self, days_ahead=7):
-        """Obtener partidos próximos reales"""
+        """Obtener partidos próximos reales de APIs gratuitas"""
         try:
-            # Si no hay API key, usar datos reales simulados basados en calendario real
-            return self._get_realistic_fixtures(days_ahead)
+            if self.api_key:
+                return self._get_football_data_matches(days_ahead)
+            else:
+                # Usar API completamente gratuita sin key
+                return self._get_free_api_matches(days_ahead)
         except Exception as e:
             print(f"Error obteniendo datos reales: {e}")
-            return self._get_realistic_fixtures(days_ahead)
+            # Fallback a API gratuita sin key
+            return self._get_free_api_matches(days_ahead)
     
-    def _get_realistic_fixtures(self, days_ahead):
-        """Generar partidos realistas basados en calendario real de fútbol"""
-        today = datetime.now().date()
+    def _get_football_data_matches(self, days_ahead):
+        """Obtener partidos reales usando Football-Data.org API"""
         fixtures = []
+        today = datetime.now().date()
+        date_to = today + timedelta(days=days_ahead)
         
-        # Calendario real de Premier League 2024-25
-        premier_league_fixtures = [
-            # Fechas reales de la temporada 2024-25
-            ('Arsenal', 'Chelsea', today + timedelta(days=1), '15:00'),
-            ('Liverpool', 'Brighton', today + timedelta(days=2), '17:30'),
-            ('Manchester City', 'Newcastle', today + timedelta(days=3), '14:00'),
-            ('Tottenham', 'West Ham', today + timedelta(days=4), '16:30'),
-            ('Manchester United', 'Aston Villa', today + timedelta(days=5), '15:00'),
-            ('Everton', 'Crystal Palace', today + timedelta(days=6), '17:30'),
-            ('Wolves', 'Leicester', today + timedelta(days=7), '14:00'),
-            ('Fulham', 'Brentford', today + timedelta(days=8), '16:00'),
-            ('Nottingham Forest', 'Sheffield United', today + timedelta(days=9), '15:30'),
-            ('Burnley', 'Luton Town', today + timedelta(days=10), '17:00')
-        ]
-        
-        # Calendario real de La Liga 2024-25
-        la_liga_fixtures = [
-            ('Real Madrid', 'Barcelona', today + timedelta(days=1), '16:00'),
-            ('Atletico Madrid', 'Sevilla', today + timedelta(days=2), '18:30'),
-            ('Valencia', 'Real Sociedad', today + timedelta(days=3), '15:00'),
-            ('Villarreal', 'Athletic Bilbao', today + timedelta(days=4), '17:30'),
-            ('Real Betis', 'Osasuna', today + timedelta(days=5), '16:00'),
-            ('Celta Vigo', 'Getafe', today + timedelta(days=6), '18:30'),
-            ('Espanyol', 'Mallorca', today + timedelta(days=7), '15:00'),
-            ('Cadiz', 'Alaves', today + timedelta(days=8), '16:30'),
-            ('Las Palmas', 'Rayo Vallecano', today + timedelta(days=9), '17:00'),
-            ('Granada', 'Almeria', today + timedelta(days=10), '18:00')
-        ]
-        
-        # Calendario real de Bundesliga 2024-25
-        bundesliga_fixtures = [
-            ('Bayern Munich', 'Borussia Dortmund', today + timedelta(days=2), '17:30'),
-            ('RB Leipzig', 'Bayer Leverkusen', today + timedelta(days=3), '15:30'),
-            ('Eintracht Frankfurt', 'Borussia Mönchengladbach', today + timedelta(days=4), '14:30'),
-            ('Wolfsburg', 'Union Berlin', today + timedelta(days=5), '16:00'),
-            ('Freiburg', 'Hoffenheim', today + timedelta(days=6), '15:30'),
-            ('Augsburg', 'Mainz', today + timedelta(days=7), '14:30'),
-            ('Stuttgart', 'Werder Bremen', today + timedelta(days=8), '15:00'),
-            ('Bochum', 'Darmstadt', today + timedelta(days=9), '16:30'),
-            ('Heidenheim', 'Köln', today + timedelta(days=10), '17:00')
-        ]
-        
-        # Agregar partidos de Premier League
-        for home, away, date, time in premier_league_fixtures:
-            fixtures.append({
-                'HomeTeam': home,
-                'AwayTeam': away,
-                'Date': date.strftime('%Y-%m-%d'),
-                'Time': time,
-                'League': 'E0',
-                'Competition': 'Premier League',
-                'Season': '2024-25',
-                'Matchday': self._get_matchday(date),
-                'Status': 'SCHEDULED'
-            })
-        
-        # Agregar partidos de La Liga
-        for home, away, date, time in la_liga_fixtures:
-            fixtures.append({
-                'HomeTeam': home,
-                'AwayTeam': away,
-                'Date': date.strftime('%Y-%m-%d'),
-                'Time': time,
-                'League': 'SP1',
-                'Competition': 'La Liga',
-                'Season': '2024-25',
-                'Matchday': self._get_matchday(date),
-                'Status': 'SCHEDULED'
-            })
-        
-        # Agregar partidos de Bundesliga
-        for home, away, date, time in bundesliga_fixtures:
-            fixtures.append({
-                'HomeTeam': home,
-                'AwayTeam': away,
-                'Date': date.strftime('%Y-%m-%d'),
-                'Time': time,
-                'League': 'D1',
-                'Competition': 'Bundesliga',
-                'Season': '2024-25',
-                'Matchday': self._get_matchday(date),
-                'Status': 'SCHEDULED'
-            })
+        for league_code, league_id in self.league_ids.items():
+            try:
+                url = f"{self.base_url}/competitions/{league_id}/matches"
+                params = {
+                    'dateFrom': today.isoformat(),
+                    'dateTo': date_to.isoformat(),
+                    'status': 'SCHEDULED'
+                }
+                
+                response = requests.get(url, headers=self.headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    for match in data.get('matches', []):
+                        if match['status'] == 'SCHEDULED':
+                            match_date = datetime.fromisoformat(match['utcDate'].replace('Z', '+00:00'))
+                            fixtures.append({
+                                'HomeTeam': match['homeTeam']['name'],
+                                'AwayTeam': match['awayTeam']['name'],
+                                'Date': match_date.strftime('%Y-%m-%d'),
+                                'Time': match_date.strftime('%H:%M'),
+                                'League': league_code,
+                                'Competition': match['competition']['name'],
+                                'Status': match['status']
+                            })
+                    print(f"✅ Obtenidos {len(data.get('matches', []))} partidos reales para {league_code}")
+                else:
+                    print(f"⚠️ Error API {league_code}: {response.status_code}")
+                
+                time.sleep(1)  # Respetar límite de rate
+                
+            except Exception as e:
+                print(f"Error obteniendo partidos de {league_code}: {e}")
+                continue
         
         return fixtures
     
-    def _get_matchday(self, date):
-        """Calcular jornada basada en la fecha"""
-        # Lógica simplificada para calcular jornada
-        start_season = datetime(2024, 8, 17).date()  # Inicio temporada 2024-25
-        days_diff = (date - start_season).days
-        matchday = (days_diff // 7) + 1
-        return min(matchday, 38)  # Máximo 38 jornadas
+    def _get_free_api_matches(self, days_ahead):
+        """Usar API completamente gratuita sin key"""
+        try:
+            # Usar API gratuita de RapidAPI
+            return self._get_rapidapi_matches(days_ahead)
+        except Exception as e:
+            print(f"Error con API gratuita: {e}")
+            # Último recurso: usar datos de calendario oficial
+            return self._get_official_calendar_matches(days_ahead)
+    
+    def _get_rapidapi_matches(self, days_ahead):
+        """Usar RapidAPI gratuita para obtener partidos reales"""
+        fixtures = []
+        today = datetime.now().date()
+        
+        # Headers para RapidAPI (sin key requerida para tier gratuito)
+        headers = {
+            'X-RapidAPI-Key': '',  # Vacío para tier gratuito
+            'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
+        }
+        
+        # IDs de ligas para RapidAPI
+        rapidapi_leagues = {
+            'E0': 39,   # Premier League
+            'SP1': 140, # La Liga
+            'D1': 78,   # Bundesliga
+            'I1': 135,  # Serie A
+            'F1': 61    # Ligue 1
+        }
+        
+        for league_code, league_id in rapidapi_leagues.items():
+            try:
+                url = f"https://api-football-v1.p.rapidapi.com/v3/fixtures"
+                params = {
+                    'league': league_id,
+                    'season': 2024,
+                    'next': 10  # Próximos 10 partidos
+                }
+                
+                response = requests.get(url, headers=headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    for fixture in data.get('response', []):
+                        if fixture['fixture']['status']['short'] == 'NS':  # Not Started
+                            match_date = datetime.fromisoformat(fixture['fixture']['date'].replace('Z', '+00:00'))
+                            fixtures.append({
+                                'HomeTeam': fixture['teams']['home']['name'],
+                                'AwayTeam': fixture['teams']['away']['name'],
+                                'Date': match_date.strftime('%Y-%m-%d'),
+                                'Time': match_date.strftime('%H:%M'),
+                                'League': league_code,
+                                'Competition': self._get_competition_name(league_code),
+                                'Status': 'SCHEDULED'
+                            })
+                    print(f"✅ Obtenidos {len(data.get('response', []))} partidos reales para {league_code}")
+                
+                time.sleep(2)  # Respetar límites de API gratuita
+                
+            except Exception as e:
+                print(f"Error RapidAPI {league_code}: {e}")
+                continue
+        
+        return fixtures
+    
+    def _get_official_calendar_matches(self, days_ahead):
+        """Obtener partidos del calendario oficial de las ligas (web scraping)"""
+        fixtures = []
+        today = datetime.now().date()
+        
+        try:
+            # Scraping del calendario oficial de Premier League
+            premier_matches = self._scrape_premier_league_calendar()
+            fixtures.extend(premier_matches)
+            
+            # Scraping del calendario oficial de La Liga
+            laliga_matches = self._scrape_laliga_calendar()
+            fixtures.extend(laliga_matches)
+            
+            print(f"✅ Obtenidos {len(fixtures)} partidos del calendario oficial")
+            
+        except Exception as e:
+            print(f"Error scraping calendarios oficiales: {e}")
+        
+        return fixtures
+    
+    def _scrape_premier_league_calendar(self):
+        """Scraping del calendario oficial de Premier League"""
+        fixtures = []
+        try:
+            from bs4 import BeautifulSoup
+            
+            url = "https://www.premierleague.com/fixtures"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Buscar elementos de partidos próximos
+                match_elements = soup.find_all('div', class_='matchList')
+                
+                for match in match_elements[:10]:  # Limitar a 10 partidos
+                    try:
+                        home_team = match.find('span', class_='teamName').text.strip()
+                        away_team = match.find_all('span', class_='teamName')[1].text.strip()
+                        date_elem = match.find('time')
+                        
+                        if date_elem:
+                            date_str = date_elem.get('datetime')
+                            if date_str:
+                                match_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                                fixtures.append({
+                                    'HomeTeam': home_team,
+                                    'AwayTeam': away_team,
+                                    'Date': match_date.strftime('%Y-%m-%d'),
+                                    'Time': match_date.strftime('%H:%M'),
+                                    'League': 'E0',
+                                    'Competition': 'Premier League',
+                                    'Status': 'SCHEDULED'
+                                })
+                    except Exception as e:
+                        continue
+                        
+        except Exception as e:
+            print(f"Error scraping Premier League: {e}")
+        
+        return fixtures
+    
+    def _scrape_laliga_calendar(self):
+        """Scraping del calendario oficial de La Liga"""
+        fixtures = []
+        try:
+            from bs4 import BeautifulSoup
+            
+            url = "https://www.laliga.com/en-GB/fixture"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Buscar elementos de partidos próximos
+                match_elements = soup.find_all('div', class_='match-item')
+                
+                for match in match_elements[:10]:  # Limitar a 10 partidos
+                    try:
+                        teams = match.find_all('span', class_='team-name')
+                        if len(teams) >= 2:
+                            home_team = teams[0].text.strip()
+                            away_team = teams[1].text.strip()
+                            
+                            date_elem = match.find('time')
+                            if date_elem:
+                                date_str = date_elem.get('datetime')
+                                if date_str:
+                                    match_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                                    fixtures.append({
+                                        'HomeTeam': home_team,
+                                        'AwayTeam': away_team,
+                                        'Date': match_date.strftime('%Y-%m-%d'),
+                                        'Time': match_date.strftime('%H:%M'),
+                                        'League': 'SP1',
+                                        'Competition': 'La Liga',
+                                        'Status': 'SCHEDULED'
+                                    })
+                    except Exception as e:
+                        continue
+                        
+        except Exception as e:
+            print(f"Error scraping La Liga: {e}")
+        
+        return fixtures
+    
+    def _get_competition_name(self, league_code):
+        """Obtener nombre de la competición"""
+        competition_names = {
+            'E0': 'Premier League',
+            'SP1': 'La Liga',
+            'D1': 'Bundesliga',
+            'I1': 'Serie A',
+            'F1': 'Ligue 1'
+        }
+        return competition_names.get(league_code, 'Unknown League')
     
     def get_team_stats(self, team_name):
-        """Obtener estadísticas reales del equipo"""
-        # Simular estadísticas reales basadas en datos actuales
-        stats = {
-            'position': 1,
-            'points': 25,
-            'played': 10,
-            'won': 8,
-            'drawn': 1,
-            'lost': 1,
-            'goals_for': 22,
-            'goals_against': 8,
-            'goal_difference': 14,
-            'form': 'WWWDW',  # Últimos 5 resultados
-            'home_form': 'WWWWW',
-            'away_form': 'WDWWW'
-        }
-        return stats
+        """Obtener estadísticas reales del equipo desde API"""
+        try:
+            # Implementar obtención de estadísticas reales
+            # Por ahora retornar None para forzar uso de datos reales
+            return None
+        except Exception as e:
+            print(f"Error obteniendo estadísticas de {team_name}: {e}")
+            return None
     
     def get_head_to_head(self, team1, team2):
-        """Obtener historial de enfrentamientos"""
-        # Simular datos H2H reales
-        h2h = {
-            'total_matches': 15,
-            'team1_wins': 8,
-            'team2_wins': 4,
-            'draws': 3,
-            'last_meeting': '2024-03-15',
-            'last_result': f'{team1} 2-1 {team2}',
-            'last_venue': 'Home'
-        }
-        return h2h
+        """Obtener historial de enfrentamientos desde API"""
+        try:
+            # Implementar obtención de H2H reales
+            # Por ahora retornar None para forzar uso de datos reales
+            return None
+        except Exception as e:
+            print(f"Error obteniendo H2H {team1} vs {team2}: {e}")
+            return None
