@@ -722,6 +722,108 @@ def sync():
             'timestamp': datetime.now().isoformat()
         })
 
+@app.route('/test-api-direct')
+def test_api_direct():
+    """Prueba directa de tu API de Football-Data.org"""
+    try:
+        print("🔍 Probando API directamente...")
+        
+        if not real_api:
+            return jsonify({'error': 'API no configurada'}), 500
+        
+        results = {}
+        
+        # Probar Premier League directamente
+        try:
+            print("🔍 Probando Premier League (PL)...")
+            url = f"{real_api.base_url}/competitions/PL/matches"
+            headers = {'X-Auth-Token': real_api.api_key}
+            
+            today = datetime.now().date()
+            from datetime import timedelta
+            params = {
+                'dateFrom': today.isoformat(),
+                'dateTo': (today + timedelta(days=7)).isoformat(),
+                'status': 'SCHEDULED'
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                matches = data.get('matches', [])
+                results['premier_league'] = {
+                    'success': True,
+                    'matches_count': len(matches),
+                    'matches': matches[:5] if matches else [],  # Primeros 5 partidos
+                    'status_code': response.status_code
+                }
+                print(f"✅ Premier League: {len(matches)} partidos")
+            else:
+                results['premier_league'] = {
+                    'success': False,
+                    'status_code': response.status_code,
+                    'error': response.text[:200]
+                }
+                print(f"❌ Premier League error: {response.status_code}")
+                
+        except Exception as e:
+            results['premier_league'] = {
+                'success': False,
+                'error': str(e)
+            }
+            print(f"❌ Premier League exception: {e}")
+        
+        # Probar La Liga
+        try:
+            print("🔍 Probando La Liga (PD)...")
+            url = f"{real_api.base_url}/competitions/PD/matches"
+            headers = {'X-Auth-Token': real_api.api_key}
+            
+            today = datetime.now().date()
+            params = {
+                'dateFrom': today.isoformat(),
+                'dateTo': (today + timedelta(days=7)).isoformat(),
+                'status': 'SCHEDULED'
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                matches = data.get('matches', [])
+                results['la_liga'] = {
+                    'success': True,
+                    'matches_count': len(matches),
+                    'matches': matches[:3] if matches else [],
+                    'status_code': response.status_code
+                }
+                print(f"✅ La Liga: {len(matches)} partidos")
+            else:
+                results['la_liga'] = {
+                    'success': False,
+                    'status_code': response.status_code,
+                    'error': response.text[:200]
+                }
+                print(f"❌ La Liga error: {response.status_code}")
+                
+        except Exception as e:
+            results['la_liga'] = {
+                'success': False,
+                'error': str(e)
+            }
+            print(f"❌ La Liga exception: {e}")
+        
+        return jsonify({
+            'api_key': real_api.api_key[:8] + '...',
+            'base_url': real_api.base_url,
+            'test_results': results,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/debug-api')
 def debug_api():
     """Diagnóstico específico de tu API de Football-Data.org"""
