@@ -737,6 +737,85 @@ def sync():
             'timestamp': datetime.now().isoformat()
         })
 
+@app.route('/debug-api')
+def debug_api():
+    """Diagnóstico específico de tu API de Football-Data.org"""
+    try:
+        debug_info = {
+            'timestamp': datetime.now().isoformat(),
+            'api_key_status': 'configured' if real_api and real_api.api_key else 'missing',
+            'api_key_preview': real_api.api_key[:8] + '...' if real_api and real_api.api_key else 'N/A',
+            'test_results': {},
+            'league_tests': {}
+        }
+        
+        if real_api:
+            # Test 1: Verificar conexión básica
+            try:
+                test_url = f"{real_api.base_url}/competitions"
+                headers = {'X-Auth-Token': real_api.api_key}
+                response = requests.get(test_url, headers=headers, timeout=10)
+                
+                debug_info['test_results']['basic_connection'] = {
+                    'status_code': response.status_code,
+                    'success': response.status_code == 200,
+                    'response_preview': response.text[:200] if response.text else 'No response'
+                }
+            except Exception as e:
+                debug_info['test_results']['basic_connection'] = {
+                    'error': str(e),
+                    'success': False
+                }
+            
+            # Test 2: Probar cada liga individualmente
+            for league_code, league_id in real_api.league_ids.items():
+                try:
+                    print(f"🔍 Probando liga {league_code} ({league_id})...")
+                    url = f"{real_api.base_url}/competitions/{league_id}/matches"
+                    headers = {'X-Auth-Token': real_api.api_key}
+                    
+                    # Parámetros para próximos partidos
+                    today = datetime.now().date()
+                    params = {
+                        'dateFrom': today.isoformat(),
+                        'dateTo': (today + timedelta(days=7)).isoformat(),
+                        'status': 'SCHEDULED'
+                    }
+                    
+                    response = requests.get(url, headers=headers, params=params, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        matches = data.get('matches', [])
+                        debug_info['league_tests'][league_code] = {
+                            'league_id': league_id,
+                            'status_code': response.status_code,
+                            'matches_count': len(matches),
+                            'sample_match': matches[0] if matches else None,
+                            'success': True
+                        }
+                    else:
+                        debug_info['league_tests'][league_code] = {
+                            'league_id': league_id,
+                            'status_code': response.status_code,
+                            'error': response.text[:200],
+                            'success': False
+                        }
+                    
+                    time.sleep(1)  # Respetar límite de API
+                    
+                except Exception as e:
+                    debug_info['league_tests'][league_code] = {
+                        'league_id': league_id,
+                        'error': str(e),
+                        'success': False
+                    }
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == "__main__":
     # Configuración para Railway
     PORT = int(os.environ.get("PORT", 8080))
