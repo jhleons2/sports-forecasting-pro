@@ -752,21 +752,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const showButtons = document.querySelectorAll('button[id^="btn-show-"]');
     console.log('Botones de partidos adicionales encontrados:', showButtons.length);
     
-    showButtons.forEach(btn => {
-        console.log('Agregando event listener a botón:', btn.id);
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Click en botón:', btn.id);
-            toggleFixtures(this);
-        });
-        
-        // Verificar que el div existe
-        const league = btn.getAttribute('data-league');
-        const extraDiv = document.getElementById(`extra-fixtures-${league}`);
-        console.log(`Div extra-fixtures-${league} existe:`, extraDiv !== null);
-        
-        // Agregar efecto hover al botón
-        btn.addEventListener('mouseenter', function() {
+    // Verificar que existen botones antes de procesarlos
+    if (showButtons.length > 0) {
+        showButtons.forEach(btn => {
+            console.log('Agregando event listener a botón:', btn.id);
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Click en botón:', btn.id);
+                toggleFixtures(this);
+            });
+            
+            // Verificar que el div existe
+            const league = btn.getAttribute('data-league');
+            const extraDiv = document.getElementById(`extra-fixtures-${league}`);
+            console.log(`Div extra-fixtures-${league} existe:`, extraDiv !== null);
+            
+            // Agregar efecto hover al botón
+            btn.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-3px)';
         });
         
@@ -776,6 +778,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    } // Cerrar el if de showButtons.length > 0
     
     // Efecto de pulso en el botón de sincronización
     const syncButton = document.querySelector('button[onclick="syncFixtures()"]');
