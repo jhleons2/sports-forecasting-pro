@@ -351,14 +351,16 @@ def get_dynamic_fixtures():
                 params = {
                     'dateFrom': today.isoformat(),
                     'dateTo': (today + timedelta(days=7)).isoformat(),
-                    'status': 'TIMED'
+                    'status': 'SCHEDULED'
                 }
                 
                 response = requests.get(pl_url, headers=headers, params=params, timeout=10)
+                print(f"📡 Premier League response: {response.status_code}")
                 
                 if response.status_code == 200:
                     data = response.json()
                     matches = data.get('matches', [])
+                    print(f"📊 Premier League matches found: {len(matches)}")
                     
                     for match in matches:
                         fixtures.append({
@@ -373,16 +375,20 @@ def get_dynamic_fixtures():
                         })
                     
                     print(f"✅ Premier League: {len(matches)} partidos")
+                else:
+                    print(f"❌ Premier League error: {response.status_code} - {response.text[:200]}")
                 
                 # Obtener La Liga
                 print("🔍 Obteniendo La Liga dinámicamente...")
                 pd_url = f"{real_api.base_url}/competitions/PD/matches"
                 
                 response = requests.get(pd_url, headers=headers, params=params, timeout=10)
+                print(f"📡 La Liga response: {response.status_code}")
                 
                 if response.status_code == 200:
                     data = response.json()
                     matches = data.get('matches', [])
+                    print(f"📊 La Liga matches found: {len(matches)}")
                     
                     for match in matches:
                         fixtures.append({
@@ -397,6 +403,8 @@ def get_dynamic_fixtures():
                         })
                     
                     print(f"✅ La Liga: {len(matches)} partidos")
+                else:
+                    print(f"❌ La Liga error: {response.status_code} - {response.text[:200]}")
                 
             except Exception as api_error:
                 print(f"❌ Error con API dinámica: {api_error}")
