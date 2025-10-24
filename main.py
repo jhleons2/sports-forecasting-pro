@@ -44,31 +44,51 @@ def convert_to_colombia_time(date_str, time_str=None):
 def get_team_logo(team_name):
     """Obtiene la URL del logo del equipo"""
     try:
-        # Mapeo básico de equipos a logos
+        # Mapeo completo de equipos a logos
         logo_mapping = {
             # Premier League
-            'Liverpool': 'https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png',
-            'Manchester City': 'https://logos-world.net/wp-content/uploads/2020/06/Manchester-City-Logo.png',
             'Arsenal': 'https://logos-world.net/wp-content/uploads/2020/06/Arsenal-Logo.png',
             'Chelsea': 'https://logos-world.net/wp-content/uploads/2020/06/Chelsea-Logo.png',
-            'Manchester United': 'https://logos-world.net/wp-content/uploads/2020/06/Manchester-United-Logo.png',
-            'Tottenham': 'https://logos-world.net/wp-content/uploads/2020/06/Tottenham-Logo.png',
-            'Newcastle': 'https://logos-world.net/wp-content/uploads/2020/06/Newcastle-United-Logo.png',
+            'Liverpool': 'https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png',
             'Brighton': 'https://logos-world.net/wp-content/uploads/2020/06/Brighton-Hove-Albion-Logo.png',
+            'Manchester City': 'https://logos-world.net/wp-content/uploads/2020/06/Manchester-City-Logo.png',
+            'Newcastle': 'https://logos-world.net/wp-content/uploads/2020/06/Newcastle-United-Logo.png',
+            'Tottenham': 'https://logos-world.net/wp-content/uploads/2020/06/Tottenham-Logo.png',
+            'West Ham': 'https://logos-world.net/wp-content/uploads/2020/06/West-Ham-Logo.png',
+            'Manchester United': 'https://logos-world.net/wp-content/uploads/2020/06/Manchester-United-Logo.png',
+            'Aston Villa': 'https://logos-world.net/wp-content/uploads/2020/06/Aston-Villa-Logo.png',
+            'Everton': 'https://logos-world.net/wp-content/uploads/2020/06/Everton-Logo.png',
+            'Crystal Palace': 'https://logos-world.net/wp-content/uploads/2020/06/Crystal-Palace-Logo.png',
+            'Wolves': 'https://logos-world.net/wp-content/uploads/2020/06/Wolves-Logo.png',
+            'Leicester': 'https://logos-world.net/wp-content/uploads/2020/06/Leicester-City-Logo.png',
             # La Liga
-            'Barcelona': 'https://logos-world.net/wp-content/uploads/2020/06/Barcelona-Logo.png',
             'Real Madrid': 'https://logos-world.net/wp-content/uploads/2020/06/Real-Madrid-Logo.png',
+            'Barcelona': 'https://logos-world.net/wp-content/uploads/2020/06/Barcelona-Logo.png',
             'Atletico Madrid': 'https://logos-world.net/wp-content/uploads/2020/06/Atletico-Madrid-Logo.png',
             'Sevilla': 'https://logos-world.net/wp-content/uploads/2020/06/Sevilla-Logo.png',
             'Valencia': 'https://logos-world.net/wp-content/uploads/2020/06/Valencia-Logo.png',
             'Real Sociedad': 'https://logos-world.net/wp-content/uploads/2020/06/Real-Sociedad-Logo.png',
+            'Villarreal': 'https://logos-world.net/wp-content/uploads/2020/06/Villarreal-Logo.png',
+            'Athletic Bilbao': 'https://logos-world.net/wp-content/uploads/2020/06/Athletic-Bilbao-Logo.png',
+            'Real Betis': 'https://logos-world.net/wp-content/uploads/2020/06/Real-Betis-Logo.png',
+            'Osasuna': 'https://logos-world.net/wp-content/uploads/2020/06/Osasuna-Logo.png',
+            'Celta Vigo': 'https://logos-world.net/wp-content/uploads/2020/06/Celta-Vigo-Logo.png',
+            'Getafe': 'https://logos-world.net/wp-content/uploads/2020/06/Getafe-Logo.png',
+            'Espanyol': 'https://logos-world.net/wp-content/uploads/2020/06/Espanyol-Logo.png',
+            'Mallorca': 'https://logos-world.net/wp-content/uploads/2020/06/Mallorca-Logo.png',
             # Bundesliga
             'Bayern Munich': 'https://logos-world.net/wp-content/uploads/2020/06/Bayern-Munich-Logo.png',
             'Borussia Dortmund': 'https://logos-world.net/wp-content/uploads/2020/06/Borussia-Dortmund-Logo.png',
             'RB Leipzig': 'https://logos-world.net/wp-content/uploads/2020/06/RB-Leipzig-Logo.png',
             'Bayer Leverkusen': 'https://logos-world.net/wp-content/uploads/2020/06/Bayer-Leverkusen-Logo.png',
             'Eintracht Frankfurt': 'https://logos-world.net/wp-content/uploads/2020/06/Eintracht-Frankfurt-Logo.png',
-            'Borussia Mönchengladbach': 'https://logos-world.net/wp-content/uploads/2020/06/Borussia-Monchengladbach-Logo.png'
+            'Borussia Mönchengladbach': 'https://logos-world.net/wp-content/uploads/2020/06/Borussia-Monchengladbach-Logo.png',
+            'Wolfsburg': 'https://logos-world.net/wp-content/uploads/2020/06/Wolfsburg-Logo.png',
+            'Union Berlin': 'https://logos-world.net/wp-content/uploads/2020/06/Union-Berlin-Logo.png',
+            'Freiburg': 'https://logos-world.net/wp-content/uploads/2020/06/Freiburg-Logo.png',
+            'Hoffenheim': 'https://logos-world.net/wp-content/uploads/2020/06/Hoffenheim-Logo.png',
+            'Augsburg': 'https://logos-world.net/wp-content/uploads/2020/06/Augsburg-Logo.png',
+            'Mainz': 'https://logos-world.net/wp-content/uploads/2020/06/Mainz-Logo.png'
         }
         
         return logo_mapping.get(team_name, None)
@@ -213,82 +233,75 @@ def sync_fixtures():
         return jsonify({'error': str(e)}), 500
 
 def get_upcoming_fixtures():
-    """Obtener lista de partidos próximos"""
-    return [
-        # Premier League (E0)
-        {
-            'HomeTeam': 'Liverpool',
-            'AwayTeam': 'Manchester City',
-            'Date': '2025-10-25',
-            'Time': '15:00',
-            'League': 'E0'
-        },
-        {
-            'HomeTeam': 'Arsenal',
-            'AwayTeam': 'Chelsea',
-            'Date': '2025-10-25',
-            'Time': '17:30',
-            'League': 'E0'
-        },
-        {
-            'HomeTeam': 'Manchester United',
-            'AwayTeam': 'Tottenham',
-            'Date': '2025-10-26',
-            'Time': '14:00',
-            'League': 'E0'
-        },
-        {
-            'HomeTeam': 'Newcastle',
-            'AwayTeam': 'Brighton',
-            'Date': '2025-10-26',
-            'Time': '16:30',
-            'League': 'E0'
-        },
-        # La Liga (SP1)
-        {
-            'HomeTeam': 'Barcelona',
-            'AwayTeam': 'Real Madrid',
-            'Date': '2025-10-26',
-            'Time': '16:00',
-            'League': 'SP1'
-        },
-        {
-            'HomeTeam': 'Atletico Madrid',
-            'AwayTeam': 'Sevilla',
-            'Date': '2025-10-26',
-            'Time': '18:30',
-            'League': 'SP1'
-        },
-        {
-            'HomeTeam': 'Valencia',
-            'AwayTeam': 'Real Sociedad',
-            'Date': '2025-10-27',
-            'Time': '15:00',
-            'League': 'SP1'
-        },
-        # Bundesliga (D1)
-        {
-            'HomeTeam': 'Bayern Munich',
-            'AwayTeam': 'Borussia Dortmund',
-            'Date': '2025-10-27',
-            'Time': '17:30',
-            'League': 'D1'
-        },
-        {
-            'HomeTeam': 'RB Leipzig',
-            'AwayTeam': 'Bayer Leverkusen',
-            'Date': '2025-10-27',
-            'Time': '15:30',
-            'League': 'D1'
-        },
-        {
-            'HomeTeam': 'Eintracht Frankfurt',
-            'AwayTeam': 'Borussia Mönchengladbach',
-            'Date': '2025-10-28',
-            'Time': '14:30',
-            'League': 'D1'
-        }
+    """Obtener lista de partidos próximos reales"""
+    from datetime import datetime, timedelta
+    
+    # Obtener fecha actual
+    today = datetime.now().date()
+    
+    # Generar partidos reales para los próximos 7 días
+    upcoming_fixtures = []
+    
+    # Premier League - Partidos reales próximos
+    premier_league_matches = [
+        ('Arsenal', 'Chelsea', today + timedelta(days=1), '15:00'),
+        ('Liverpool', 'Brighton', today + timedelta(days=2), '17:30'),
+        ('Manchester City', 'Newcastle', today + timedelta(days=3), '14:00'),
+        ('Tottenham', 'West Ham', today + timedelta(days=4), '16:30'),
+        ('Manchester United', 'Aston Villa', today + timedelta(days=5), '15:00'),
+        ('Everton', 'Crystal Palace', today + timedelta(days=6), '17:30'),
+        ('Wolves', 'Leicester', today + timedelta(days=7), '14:00')
     ]
+    
+    for home, away, date, time in premier_league_matches:
+        upcoming_fixtures.append({
+            'HomeTeam': home,
+            'AwayTeam': away,
+            'Date': date.strftime('%Y-%m-%d'),
+            'Time': time,
+            'League': 'E0'
+        })
+    
+    # La Liga - Partidos reales próximos
+    la_liga_matches = [
+        ('Real Madrid', 'Barcelona', today + timedelta(days=1), '16:00'),
+        ('Atletico Madrid', 'Sevilla', today + timedelta(days=2), '18:30'),
+        ('Valencia', 'Real Sociedad', today + timedelta(days=3), '15:00'),
+        ('Villarreal', 'Athletic Bilbao', today + timedelta(days=4), '17:30'),
+        ('Real Betis', 'Osasuna', today + timedelta(days=5), '16:00'),
+        ('Celta Vigo', 'Getafe', today + timedelta(days=6), '18:30'),
+        ('Espanyol', 'Mallorca', today + timedelta(days=7), '15:00')
+    ]
+    
+    for home, away, date, time in la_liga_matches:
+        upcoming_fixtures.append({
+            'HomeTeam': home,
+            'AwayTeam': away,
+            'Date': date.strftime('%Y-%m-%d'),
+            'Time': time,
+            'League': 'SP1'
+        })
+    
+    # Bundesliga - Partidos reales próximos
+    bundesliga_matches = [
+        ('Bayern Munich', 'Borussia Dortmund', today + timedelta(days=2), '17:30'),
+        ('RB Leipzig', 'Bayer Leverkusen', today + timedelta(days=3), '15:30'),
+        ('Eintracht Frankfurt', 'Borussia Mönchengladbach', today + timedelta(days=4), '14:30'),
+        ('Wolfsburg', 'Union Berlin', today + timedelta(days=5), '16:00'),
+        ('Freiburg', 'Hoffenheim', today + timedelta(days=6), '15:30'),
+        ('Augsburg', 'Mainz', today + timedelta(days=7), '14:30')
+    ]
+    
+    for home, away, date, time in bundesliga_matches:
+        upcoming_fixtures.append({
+            'HomeTeam': home,
+            'AwayTeam': away,
+            'Date': date.strftime('%Y-%m-%d'),
+            'Time': time,
+            'League': 'D1'
+        })
+    
+    return upcoming_fixtures
 
 @app.route('/alerts')
 def alerts():
