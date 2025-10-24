@@ -309,6 +309,19 @@ def debug():
                     'error': str(e)
                 }
         
+        # Probar el sistema completo
+        try:
+            all_fixtures = get_upcoming_fixtures()
+            debug_info['system_test'] = {
+                'total_fixtures': len(all_fixtures),
+                'sample_fixtures': all_fixtures[:3] if all_fixtures else [],
+                'leagues': list(set([f['League'] for f in all_fixtures])) if all_fixtures else []
+            }
+        except Exception as e:
+            debug_info['system_test'] = {
+                'error': str(e)
+            }
+        
         return jsonify(debug_info)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
