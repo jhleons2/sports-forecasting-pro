@@ -556,8 +556,87 @@ def test():
         'api_status': 'OK' if real_api else 'Not Available'
     }, 200
 
-@app.route('/test-api')
-def test_api():
+@app.route('/debug-premier')
+def debug_premier():
+    """Endpoint específico para debuggear Premier League"""
+    try:
+        debug_info = {
+            'timestamp': datetime.now().isoformat(),
+            'premier_league_test': None,
+            'sportdb_verification': None,
+            'all_sources_test': None
+        }
+        
+        if real_api:
+            # Probar específicamente Premier League
+            try:
+                print("🔍 Debugging Premier League específicamente...")
+                
+                # Test 1: Verificar ID de Premier League
+                test_url = "https://www.thesportsdb.com/api/v1/json/123/lookupleague.php?id=4328"
+                response = requests.get(test_url, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    league_info = data.get('leagues', [{}])[0]
+                    debug_info['sportdb_verification'] = {
+                        'id_4328_name': league_info.get('strLeague', 'Unknown'),
+                        'id_4328_country': league_info.get('strCountry', 'Unknown'),
+                        'id_4328_sport': league_info.get('strSport', 'Unknown')
+                    }
+                
+                # Test 2: Buscar Premier League real
+                all_leagues_url = "https://www.thesportsdb.com/api/v1/json/123/all_leagues.php"
+                leagues_response = requests.get(all_leagues_url, timeout=10)
+                
+                if leagues_response.status_code == 200:
+                    leagues_data = leagues_response.json()
+                    all_leagues = leagues_data.get('leagues', [])
+                    
+                    premier_leagues = []
+                    for league in all_leagues:
+                        league_name = league.get('strLeague', '')
+                        if 'Premier League' in league_name or 'EPL' in league_name:
+                            premier_leagues.append({
+                                'id': league.get('idLeague'),
+                                'name': league_name,
+                                'country': league.get('strCountry', ''),
+                                'sport': league.get('strSport', '')
+                            })
+                    
+                    debug_info['premier_league_test'] = {
+                        'found_premier_leagues': premier_leagues,
+                        'total_leagues_searched': len(all_leagues)
+                    }
+                
+                # Test 3: Probar obtener partidos con diferentes IDs
+                fixtures_test = {}
+                for league in premier_leagues[:3]:  # Probar los primeros 3
+                    try:
+                        league_id = league['id']
+                        url = f"https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id={league_id}"
+                        response = requests.get(url, timeout=10)
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            events = data.get('events', [])
+                            fixtures_test[f"league_{league_id}"] = {
+                                'name': league['name'],
+                                'events_count': len(events),
+                                'sample_events': events[:3] if events else []
+                            }
+                    except Exception as e:
+                        fixtures_test[f"league_{league['id']}"] = {'error': str(e)}
+                
+                debug_info['all_sources_test'] = fixtures_test
+                
+            except Exception as e:
+                debug_info['error'] = str(e)
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     """Endpoint para probar la conexión con la API y verificar ligas disponibles"""
     try:
         if not real_api:

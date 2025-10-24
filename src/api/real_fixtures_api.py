@@ -46,58 +46,31 @@ class RealFixturesAPI:
         self.last_request_time = time.time()
     
     def get_upcoming_matches(self, days_ahead=7):
-        """Obtener partidos próximos de múltiples fuentes gratuitas - SOLO DATOS REALES"""
+        """Obtener partidos próximos de fuentes gratuitas - OPTIMIZADO PARA VELOCIDAD"""
         try:
             # Verificar cache primero
             cache_key = f"api_fixtures_{days_ahead}"
             if cache_key in self.cache:
                 cache_time = self.cache[cache_key]['timestamp']
-                if time.time() - cache_time < 600:  # Cache válido por 10 minutos
+                if time.time() - cache_time < 300:  # Cache válido por 5 minutos
                     print(f"📋 Usando datos del cache para {days_ahead} días")
                     return self.cache[cache_key]['data']
             
-            print(f"🔍 Obteniendo partidos REALES de fuentes gratuitas para {days_ahead} días...")
+            print(f"🔍 Obteniendo partidos REALES (modo rápido)...")
             
-            # Intentar múltiples fuentes gratuitas
+            # Solo usar The Sport DB por ahora (más rápido y confiable)
             fixtures = []
             
-            # Fuente 1: Football-Data.org (si tienes API key)
-            if self.api_key:
-                try:
-                    self._respect_rate_limit()
-                    football_data_fixtures = self._get_football_data_matches(days_ahead)
-                    if len(football_data_fixtures) > 0:
-                        fixtures.extend(football_data_fixtures)
-                        print(f"✅ Obtenidos {len(football_data_fixtures)} partidos de Football-Data.org")
-                except Exception as e:
-                    print(f"⚠️ Error con Football-Data.org: {e}")
-            
-            # Fuente 2: The Sport DB (completamente gratuito)
             try:
-                sportdb_fixtures = self._get_sportdb_matches(days_ahead)
+                print("📡 Usando solo The Sport DB para velocidad...")
+                sportdb_fixtures = self._get_sportdb_matches_fast(days_ahead)
                 if len(sportdb_fixtures) > 0:
                     fixtures.extend(sportdb_fixtures)
-                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB (League)")
-                
-                # También intentar método diario para más cobertura
-                sportdb_daily_fixtures = self._get_sportdb_daily_matches(days_ahead)
-                if len(sportdb_daily_fixtures) > 0:
-                    fixtures.extend(sportdb_daily_fixtures)
-                    print(f"✅ Obtenidos {len(sportdb_daily_fixtures)} partidos de The Sport DB (Daily)")
-                    
+                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
             except Exception as e:
                 print(f"⚠️ Error con The Sport DB: {e}")
             
-            # Fuente 3: FootyStats (gratuito con límite)
-            try:
-                footystats_fixtures = self._get_footystats_matches(days_ahead)
-                if len(footystats_fixtures) > 0:
-                    fixtures.extend(footystats_fixtures)
-                    print(f"✅ Obtenidos {len(footystats_fixtures)} partidos de FootyStats")
-            except Exception as e:
-                print(f"⚠️ Error con FootyStats: {e}")
-            
-            # Eliminar duplicados basado en equipos y fecha
+            # Eliminar duplicados
             unique_fixtures = self._remove_duplicates(fixtures)
             
             if len(unique_fixtures) > 0:
@@ -106,10 +79,10 @@ class RealFixturesAPI:
                     'data': unique_fixtures,
                     'timestamp': time.time()
                 }
-                print(f"🎯 Total de partidos REALES únicos obtenidos: {len(unique_fixtures)}")
+                print(f"🎯 Total de partidos REALES obtenidos: {len(unique_fixtures)}")
                 return unique_fixtures
             else:
-                print("❌ No se pudieron obtener partidos de ninguna fuente")
+                print("❌ No se pudieron obtener partidos")
                 return []
             
         except Exception as e:
@@ -324,6 +297,63 @@ class RealFixturesAPI:
                 continue
         
         print(f"📊 Total partidos de The Sport DB: {len(fixtures)}")
+        return fixtures
+    
+    def _get_sportdb_matches_fast(self, days_ahead):
+        """Obtener partidos de The Sport DB - MODO RÁPIDO"""
+        print("📡 The Sport DB - Modo rápido...")
+        fixtures = []
+        today = datetime.now().date()
+        
+        # Solo usar el endpoint por día (más rápido que por liga)
+        try:
+            # Obtener partidos para hoy y mañana (más rápido)
+            for day_offset in range(min(days_ahead, 3)):  # Solo 3 días máximo
+                target_date = today + timedelta(days=day_offset)
+                date_str = target_date.strftime('%Y-%m-%d')
+                
+                print(f"🔍 Obteniendo partidos para {date_str}...")
+                
+                # Endpoint oficial: Schedule Day
+                url = f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d={date_str}&s=Soccer"
+                response = requests.get(url, timeout=5)  # Timeout más corto
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    events = data.get('events', [])
+                    
+                    for event in events:
+                        try:
+                            # Mapear ligas según el nombre
+                            league_name = event.get('strLeague', '')
+                            league_code = self._map_league_name_to_code(league_name)
+                            
+                            if league_code:  # Solo incluir ligas que conocemos
+                                fixtures.append({
+                                    'HomeTeam': event['strHomeTeam'],
+                                    'AwayTeam': event['strAwayTeam'],
+                                    'Date': event['dateEvent'],
+                                    'Time': event.get('strTime', '15:00'),
+                                    'League': league_code,
+                                    'Competition': league_name,
+                                    'Status': 'SCHEDULED',
+                                    'Source': 'The Sport DB (Fast)',
+                                    'EventID': event.get('idEvent', ''),
+                                    'Venue': event.get('strVenue', ''),
+                                    'Country': event.get('strCountry', '')
+                                })
+                        except Exception as e:
+                            continue
+                    
+                    print(f"✅ Obtenidos {len(events)} eventos para {date_str}")
+                
+                # Delay mínimo entre requests
+                time.sleep(1)
+                
+        except Exception as e:
+            print(f"❌ Error en modo rápido: {e}")
+        
+        print(f"📊 Total partidos (modo rápido): {len(fixtures)}")
         return fixtures
     
     def _get_sportdb_daily_matches(self, days_ahead):
