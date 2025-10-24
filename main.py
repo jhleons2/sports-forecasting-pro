@@ -882,6 +882,67 @@ def sync():
             'timestamp': datetime.now().isoformat()
         })
 
+@app.route('/debug-dashboard')
+def debug_dashboard():
+    """Diagnóstico específico del dashboard principal"""
+    try:
+        print("🔍 Diagnosticando dashboard principal...")
+        
+        debug_info = {
+            'timestamp': datetime.now().isoformat(),
+            'real_api_status': real_api is not None,
+            'api_key_status': 'configured' if real_api and real_api.api_key else 'missing',
+            'dynamic_fixtures_test': None,
+            'template_variables': None
+        }
+        
+        # Probar get_dynamic_fixtures()
+        try:
+            print("🔍 Probando get_dynamic_fixtures()...")
+            fixtures = get_dynamic_fixtures()
+            debug_info['dynamic_fixtures_test'] = {
+                'success': True,
+                'fixtures_count': len(fixtures),
+                'sample_fixtures': fixtures[:3] if fixtures else [],
+                'all_fixtures': fixtures
+            }
+            print(f"✅ get_dynamic_fixtures() devolvió {len(fixtures)} partidos")
+        except Exception as e:
+            debug_info['dynamic_fixtures_test'] = {
+                'success': False,
+                'error': str(e)
+            }
+            print(f"❌ Error en get_dynamic_fixtures(): {e}")
+        
+        # Probar agrupación por liga
+        try:
+            print("🔍 Probando agrupación por liga...")
+            fixtures = get_dynamic_fixtures()
+            fixtures_by_league = {}
+            for fixture in fixtures:
+                league = fixture.get('League', 'Unknown')
+                if league not in fixtures_by_league:
+                    fixtures_by_league[league] = []
+                fixtures_by_league[league].append(fixture)
+            
+            debug_info['template_variables'] = {
+                'fixtures_count': len(fixtures),
+                'leagues_count': len(fixtures_by_league),
+                'leagues': list(fixtures_by_league.keys()),
+                'fixtures_by_league': fixtures_by_league
+            }
+            print(f"✅ Agrupación: {len(fixtures_by_league)} ligas")
+        except Exception as e:
+            debug_info['template_variables'] = {
+                'error': str(e)
+            }
+            print(f"❌ Error en agrupación: {e}")
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/test-api-direct')
 def test_api_direct():
     """Prueba directa de tu API de Football-Data.org"""
