@@ -136,9 +136,9 @@ def index():
             'last_update': datetime.now().strftime('%H:%M')
         }
         
-        # Obtener datos de partidos próximos
-        print("📅 Obteniendo partidos próximos...")
-        upcoming_fixtures = get_upcoming_fixtures()
+        # Obtener datos de partidos próximos DINÁMICOS de tu API
+        print("📅 Obteniendo partidos próximos DINÁMICOS...")
+        upcoming_fixtures = get_dynamic_fixtures()
         print(f"📊 Total de partidos obtenidos: {len(upcoming_fixtures)}")
         
         if len(upcoming_fixtures) == 0:
@@ -331,6 +331,98 @@ def debug():
         return jsonify(debug_info)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def get_dynamic_fixtures():
+    """Obtener partidos dinámicos de tu API de Football-Data.org"""
+    try:
+        print("🔄 Obteniendo partidos dinámicos de tu API...")
+        
+        fixtures = []
+        
+        if real_api:
+            try:
+                # Obtener Premier League
+                print("🔍 Obteniendo Premier League dinámicamente...")
+                pl_url = f"{real_api.base_url}/competitions/PL/matches"
+                headers = {'X-Auth-Token': real_api.api_key}
+                
+                today = datetime.now().date()
+                from datetime import timedelta
+                params = {
+                    'dateFrom': today.isoformat(),
+                    'dateTo': (today + timedelta(days=7)).isoformat(),
+                    'status': 'TIMED'
+                }
+                
+                response = requests.get(pl_url, headers=headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    matches = data.get('matches', [])
+                    
+                    for match in matches:
+                        fixtures.append({
+                            'HomeTeam': match['homeTeam']['name'],
+                            'AwayTeam': match['awayTeam']['name'],
+                            'Date': match['utcDate'][:10],
+                            'Time': match['utcDate'][11:16],
+                            'League': 'E0',
+                            'Competition': 'Premier League',
+                            'Status': 'SCHEDULED',
+                            'Source': 'Football-Data.org API'
+                        })
+                    
+                    print(f"✅ Premier League: {len(matches)} partidos")
+                
+                # Obtener La Liga
+                print("🔍 Obteniendo La Liga dinámicamente...")
+                pd_url = f"{real_api.base_url}/competitions/PD/matches"
+                
+                response = requests.get(pd_url, headers=headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    matches = data.get('matches', [])
+                    
+                    for match in matches:
+                        fixtures.append({
+                            'HomeTeam': match['homeTeam']['name'],
+                            'AwayTeam': match['awayTeam']['name'],
+                            'Date': match['utcDate'][:10],
+                            'Time': match['utcDate'][11:16],
+                            'League': 'SP1',
+                            'Competition': 'La Liga',
+                            'Status': 'SCHEDULED',
+                            'Source': 'Football-Data.org API'
+                        })
+                    
+                    print(f"✅ La Liga: {len(matches)} partidos")
+                
+            except Exception as api_error:
+                print(f"❌ Error con API dinámica: {api_error}")
+                fixtures = []
+        
+        # Si no hay datos de la API, usar respaldo mínimo
+        if len(fixtures) == 0:
+            print("⚠️ Usando respaldo mínimo dinámico")
+            today = datetime.now().date()
+            fixtures = [{
+                'HomeTeam': 'Arsenal',
+                'AwayTeam': 'Chelsea',
+                'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
+                'Time': '15:00',
+                'League': 'E0',
+                'Competition': 'Premier League',
+                'Status': 'SCHEDULED',
+                'Source': 'Respaldo mínimo'
+            }]
+        
+        print(f"✅ Total partidos dinámicos: {len(fixtures)}")
+        return fixtures
+        
+    except Exception as e:
+        print(f"❌ Error en get_dynamic_fixtures: {e}")
+        return []
 
 def get_upcoming_fixtures():
     """Obtener partidos próximos reales usando API dinámica - GARANTIZA DATOS REALES"""
