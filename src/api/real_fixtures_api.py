@@ -12,11 +12,11 @@ class RealFixturesAPI:
         self.api_key = os.environ.get('FOOTBALL_API_KEY', '2b1693b0c9ba4a99bf8346cd0a9d27d0')  # Tu API key
         self.base_url = "https://api.football-data.org/v4"
         self.headers = {
-            'X-Auth-Token': self.api_key,
+            'X-Auth-Token': self.api_key,  # CORREGIDO: Usar X-Auth-Token
             'Content-Type': 'application/json'
         }
         
-        # IDs de las principales ligas europeas (según tu cuenta)
+        # IDs de las principales ligas europeas según tu cuenta
         self.league_ids = {
             'E0': 'PL',  # Premier League
             'SP1': 'PD', # Primera Division (La Liga)
@@ -28,10 +28,11 @@ class RealFixturesAPI:
         # Cache para evitar múltiples llamadas
         self.cache = {}
         self.last_request_time = 0
-        self.request_delay = 6  # 6 segundos entre requests para respetar límite
+        self.request_delay = 2  # Reducido a 2 segundos
         
         print(f"🔑 API configurada con key: {self.api_key[:8]}...")
         print(f"⏱️ Delay entre requests: {self.request_delay} segundos")
+        print(f"📊 Ligas disponibles: {list(self.league_ids.values())}")
         
     def _respect_rate_limit(self):
         """Respetar el límite de requests de la API"""
@@ -46,7 +47,7 @@ class RealFixturesAPI:
         self.last_request_time = time.time()
     
     def get_upcoming_matches(self, days_ahead=7):
-        """Obtener partidos próximos de fuentes gratuitas - OPTIMIZADO PARA VELOCIDAD"""
+        """Obtener partidos próximos usando tu API key de Football-Data.org"""
         try:
             # Verificar cache primero
             cache_key = f"api_fixtures_{days_ahead}"
@@ -56,19 +57,32 @@ class RealFixturesAPI:
                     print(f"📋 Usando datos del cache para {days_ahead} días")
                     return self.cache[cache_key]['data']
             
-            print(f"🔍 Obteniendo partidos REALES (modo rápido)...")
+            print(f"🔍 Obteniendo partidos REALES con tu API key...")
             
-            # Solo usar The Sport DB por ahora (más rápido y confiable)
             fixtures = []
             
-            try:
-                print("📡 Usando solo The Sport DB para velocidad...")
-                sportdb_fixtures = self._get_sportdb_matches_fast(days_ahead)
-                if len(sportdb_fixtures) > 0:
-                    fixtures.extend(sportdb_fixtures)
-                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
-            except Exception as e:
-                print(f"⚠️ Error con The Sport DB: {e}")
+            # Prioridad 1: Tu API key de Football-Data.org
+            if self.api_key:
+                try:
+                    print("📡 Usando tu API key de Football-Data.org...")
+                    self._respect_rate_limit()
+                    football_data_fixtures = self._get_football_data_matches(days_ahead)
+                    if len(football_data_fixtures) > 0:
+                        fixtures.extend(football_data_fixtures)
+                        print(f"✅ Obtenidos {len(football_data_fixtures)} partidos de tu API")
+                except Exception as e:
+                    print(f"⚠️ Error con tu API: {e}")
+            
+            # Prioridad 2: The Sport DB como respaldo
+            if len(fixtures) == 0:
+                try:
+                    print("📡 Usando The Sport DB como respaldo...")
+                    sportdb_fixtures = self._get_sportdb_matches_fast(days_ahead)
+                    if len(sportdb_fixtures) > 0:
+                        fixtures.extend(sportdb_fixtures)
+                        print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
+                except Exception as e:
+                    print(f"⚠️ Error con The Sport DB: {e}")
             
             # Eliminar duplicados
             unique_fixtures = self._remove_duplicates(fixtures)
@@ -150,7 +164,13 @@ class RealFixturesAPI:
                     'status': 'SCHEDULED'
                 }
                 
-                response = requests.get(url, headers=self.headers, params=params, timeout=15)
+                # Headers correctos con X-Auth-Token
+                headers = {
+                    'X-Auth-Token': self.api_key,
+                    'Content-Type': 'application/json'
+                }
+                
+                response = requests.get(url, headers=headers, params=params, timeout=15)
                 
                 if response.status_code == 200:
                     data = response.json()
