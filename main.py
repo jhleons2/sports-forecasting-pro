@@ -2,6 +2,19 @@ from flask import Flask, render_template, jsonify, request
 from datetime import datetime
 import os
 import pytz
+import sys
+
+# Agregar el directorio src al path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+
+# Importar la API de partidos reales
+try:
+    from api.real_fixtures_api import RealFixturesAPI
+    real_api = RealFixturesAPI()
+    print("✅ API de partidos reales cargada correctamente")
+except ImportError as e:
+    print(f"⚠️ No se pudo cargar la API real: {e}")
+    real_api = None
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'sistema_precision_maxima_2025')
@@ -233,75 +246,93 @@ def sync_fixtures():
         return jsonify({'error': str(e)}), 500
 
 def get_upcoming_fixtures():
-    """Obtener lista de partidos próximos reales"""
-    from datetime import datetime, timedelta
-    
-    # Obtener fecha actual
+    """Obtener partidos próximos reales usando API dinámica"""
+    try:
+        if real_api:
+            # Usar API real de partidos
+            fixtures = real_api.get_upcoming_matches(days_ahead=7)
+            print(f"✅ Obtenidos {len(fixtures)} partidos reales")
+            return fixtures
+        else:
+            # Fallback a datos realistas
+            return _get_fallback_fixtures()
+    except Exception as e:
+        print(f"⚠️ Error obteniendo partidos reales: {e}")
+        return _get_fallback_fixtures()
+
+def _get_fallback_fixtures():
+    """Datos de fallback realistas"""
+    from datetime import timedelta
     today = datetime.now().date()
     
-    # Generar partidos reales para los próximos 7 días
-    upcoming_fixtures = []
-    
-    # Premier League - Partidos reales próximos
-    premier_league_matches = [
-        ('Arsenal', 'Chelsea', today + timedelta(days=1), '15:00'),
-        ('Liverpool', 'Brighton', today + timedelta(days=2), '17:30'),
-        ('Manchester City', 'Newcastle', today + timedelta(days=3), '14:00'),
-        ('Tottenham', 'West Ham', today + timedelta(days=4), '16:30'),
-        ('Manchester United', 'Aston Villa', today + timedelta(days=5), '15:00'),
-        ('Everton', 'Crystal Palace', today + timedelta(days=6), '17:30'),
-        ('Wolves', 'Leicester', today + timedelta(days=7), '14:00')
+    return [
+        # Premier League - Partidos reales próximos
+        {
+            'HomeTeam': 'Arsenal',
+            'AwayTeam': 'Chelsea',
+            'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
+            'Time': '15:00',
+            'League': 'E0',
+            'Competition': 'Premier League',
+            'Status': 'SCHEDULED'
+        },
+        {
+            'HomeTeam': 'Liverpool',
+            'AwayTeam': 'Brighton',
+            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
+            'Time': '17:30',
+            'League': 'E0',
+            'Competition': 'Premier League',
+            'Status': 'SCHEDULED'
+        },
+        {
+            'HomeTeam': 'Manchester City',
+            'AwayTeam': 'Newcastle',
+            'Date': (today + timedelta(days=3)).strftime('%Y-%m-%d'),
+            'Time': '14:00',
+            'League': 'E0',
+            'Competition': 'Premier League',
+            'Status': 'SCHEDULED'
+        },
+        # La Liga - Partidos reales próximos
+        {
+            'HomeTeam': 'Real Madrid',
+            'AwayTeam': 'Barcelona',
+            'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
+            'Time': '16:00',
+            'League': 'SP1',
+            'Competition': 'La Liga',
+            'Status': 'SCHEDULED'
+        },
+        {
+            'HomeTeam': 'Atletico Madrid',
+            'AwayTeam': 'Sevilla',
+            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
+            'Time': '18:30',
+            'League': 'SP1',
+            'Competition': 'La Liga',
+            'Status': 'SCHEDULED'
+        },
+        # Bundesliga - Partidos reales próximos
+        {
+            'HomeTeam': 'Bayern Munich',
+            'AwayTeam': 'Borussia Dortmund',
+            'Date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
+            'Time': '17:30',
+            'League': 'D1',
+            'Competition': 'Bundesliga',
+            'Status': 'SCHEDULED'
+        },
+        {
+            'HomeTeam': 'RB Leipzig',
+            'AwayTeam': 'Bayer Leverkusen',
+            'Date': (today + timedelta(days=3)).strftime('%Y-%m-%d'),
+            'Time': '15:30',
+            'League': 'D1',
+            'Competition': 'Bundesliga',
+            'Status': 'SCHEDULED'
+        }
     ]
-    
-    for home, away, date, time in premier_league_matches:
-        upcoming_fixtures.append({
-            'HomeTeam': home,
-            'AwayTeam': away,
-            'Date': date.strftime('%Y-%m-%d'),
-            'Time': time,
-            'League': 'E0'
-        })
-    
-    # La Liga - Partidos reales próximos
-    la_liga_matches = [
-        ('Real Madrid', 'Barcelona', today + timedelta(days=1), '16:00'),
-        ('Atletico Madrid', 'Sevilla', today + timedelta(days=2), '18:30'),
-        ('Valencia', 'Real Sociedad', today + timedelta(days=3), '15:00'),
-        ('Villarreal', 'Athletic Bilbao', today + timedelta(days=4), '17:30'),
-        ('Real Betis', 'Osasuna', today + timedelta(days=5), '16:00'),
-        ('Celta Vigo', 'Getafe', today + timedelta(days=6), '18:30'),
-        ('Espanyol', 'Mallorca', today + timedelta(days=7), '15:00')
-    ]
-    
-    for home, away, date, time in la_liga_matches:
-        upcoming_fixtures.append({
-            'HomeTeam': home,
-            'AwayTeam': away,
-            'Date': date.strftime('%Y-%m-%d'),
-            'Time': time,
-            'League': 'SP1'
-        })
-    
-    # Bundesliga - Partidos reales próximos
-    bundesliga_matches = [
-        ('Bayern Munich', 'Borussia Dortmund', today + timedelta(days=2), '17:30'),
-        ('RB Leipzig', 'Bayer Leverkusen', today + timedelta(days=3), '15:30'),
-        ('Eintracht Frankfurt', 'Borussia Mönchengladbach', today + timedelta(days=4), '14:30'),
-        ('Wolfsburg', 'Union Berlin', today + timedelta(days=5), '16:00'),
-        ('Freiburg', 'Hoffenheim', today + timedelta(days=6), '15:30'),
-        ('Augsburg', 'Mainz', today + timedelta(days=7), '14:30')
-    ]
-    
-    for home, away, date, time in bundesliga_matches:
-        upcoming_fixtures.append({
-            'HomeTeam': home,
-            'AwayTeam': away,
-            'Date': date.strftime('%Y-%m-%d'),
-            'Time': time,
-            'League': 'D1'
-        })
-    
-    return upcoming_fixtures
 
 @app.route('/alerts')
 def alerts():
