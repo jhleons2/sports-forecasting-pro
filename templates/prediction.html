@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header border-0">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-line text-primary"></i> 
+                    Predicción del Partido
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Información del Partido -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="match-info text-center">
+                            <h2 class="text-dark mb-3">{{ prediction.match }}</h2>
+                            <div class="match-details">
+                                <span class="badge badge-info mr-2">
+                                    <i class="fas fa-calendar-alt mr-1"></i> {{ prediction.date }}
+                                </span>
+                                <span class="badge badge-success mr-2">
+                                    <i class="fas fa-clock mr-1"></i> {{ prediction.time }}
+                                </span>
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-trophy mr-1"></i> 
+                                    {% if prediction.league == 'E0' %}Premier League
+                                    {% elif prediction.league == 'SP1' %}La Liga
+                                    {% elif prediction.league == 'D1' %}Bundesliga
+                                    {% elif prediction.league == 'I1' %}Serie A
+                                    {% elif prediction.league == 'F1' %}Ligue 1
+                                    {% else %}{{ prediction.league }}{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Predicciones 1X2 -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-dark mb-3">
+                            <i class="fas fa-futbol mr-2"></i> Predicción 1X2
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card prediction-card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="prediction-icon mb-3">
+                                            <i class="fas fa-home text-primary" style="font-size: 2rem;"></i>
+                                        </div>
+                                        <h5 class="text-dark mb-2">GANA LOCAL</h5>
+                                        <div class="prediction-percentage">
+                                            <span class="h2 font-weight-bold text-primary">{{ (prediction['1x2'].home * 100)|round(1) }}%</span>
+                                        </div>
+                                        <div class="prediction-bar mt-3">
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-primary" 
+                                                     style="width: {{ prediction['1x2'].home * 100 }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card prediction-card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="prediction-icon mb-3">
+                                            <i class="fas fa-equals text-warning" style="font-size: 2rem;"></i>
+                                        </div>
+                                        <h5 class="text-dark mb-2">EMPATE</h5>
+                                        <div class="prediction-percentage">
+                                            <span class="h2 font-weight-bold text-warning">{{ (prediction['1x2'].draw * 100)|round(1) }}%</span>
+                                        </div>
+                                        <div class="prediction-bar mt-3">
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" 
+                                                     style="width: {{ prediction['1x2'].draw * 100 }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card prediction-card border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <div class="prediction-icon mb-3">
+                                            <i class="fas fa-plane text-success" style="font-size: 2rem;"></i>
+                                        </div>
+                                        <h5 class="text-dark mb-2">GANA VISITANTE</h5>
+                                        <div class="prediction-percentage">
+                                            <span class="h2 font-weight-bold text-success">{{ (prediction['1x2'].away * 100)|round(1) }}%</span>
+                                        </div>
+                                        <div class="prediction-bar mt-3">
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-success" 
+                                                     style="width: {{ prediction['1x2'].away * 100 }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Modelo -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-gradient-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-brain mr-2"></i> Información del Modelo
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="model-stat">
+                                            <i class="fas fa-bullseye text-success" style="font-size: 2rem;"></i>
+                                            <h6 class="text-muted mt-2">Precisión</h6>
+                                            <h4 class="text-success">{{ prediction.model_info.accuracy }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="model-stat">
+                                            <i class="fas fa-chart-line text-info" style="font-size: 2rem;"></i>
+                                            <h6 class="text-muted mt-2">Confianza</h6>
+                                            <h4 class="text-info">{{ (prediction.confidence * 100)|round(1) }}%</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="model-stat">
+                                            <i class="fas fa-cogs text-warning" style="font-size: 2rem;"></i>
+                                            <h6 class="text-muted mt-2">Modelos</h6>
+                                            <h4 class="text-warning">{{ prediction.model_info.models_used }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-center mb-3">
+                                        <div class="model-stat">
+                                            <i class="fas fa-database text-primary" style="font-size: 2rem;"></i>
+                                            <h6 class="text-muted mt-2">Features</h6>
+                                            <h4 class="text-primary">{{ prediction.model_info.features }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <span class="badge badge-primary badge-lg">
+                                        {{ prediction.model_info.type }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <a href="/" class="btn btn-primary btn-lg mr-3">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver al Dashboard
+                        </a>
+                        <a href="/analysis/{{ prediction.league }}/{{ match_index }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-brain mr-2"></i> Ver Análisis IA
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.prediction-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+}
+
+.prediction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+.prediction-percentage {
+    margin: 15px 0;
+}
+
+.prediction-bar {
+    margin-top: 10px;
+}
+
+.progress {
+    border-radius: 10px;
+    background-color: #f8f9fa;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.model-stat {
+    padding: 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+}
+
+.model-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.match-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.match-info h2 {
+    color: white;
+    font-weight: bold;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.badge-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .match-info {
+        padding: 20px;
+    }
+    
+    .match-info h2 {
+        font-size: 1.5rem;
+    }
+    
+    .model-stat {
+        padding: 15px;
+    }
+    
+    .prediction-percentage .h2 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
