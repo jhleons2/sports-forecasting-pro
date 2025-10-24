@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 import pytz
 import sys
+import requests
 
 # Agregar el directorio src al path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
@@ -704,6 +705,37 @@ def status():
         'status': 'operational',
         'timestamp': datetime.now().isoformat()
     }, 200
+
+@app.route('/sync')
+def sync():
+    """Endpoint para sincronizar datos - devuelve JSON"""
+    try:
+        print("🔄 Sincronizando datos...")
+        
+        if real_api:
+            fixtures = real_api.get_upcoming_matches(days_ahead=7)
+            print(f"📊 Obtenidos {len(fixtures)} partidos")
+            
+            return jsonify({
+                'success': True,
+                'fixtures': fixtures,
+                'total': len(fixtures),
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'API no disponible',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+    except Exception as e:
+        print(f"❌ Error en sync: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 if __name__ == "__main__":
     # Configuración para Railway
