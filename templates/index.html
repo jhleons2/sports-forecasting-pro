@@ -143,7 +143,7 @@
                                             {% set logo_url = get_team_logo(match.HomeTeam) %}
                                             {% if logo_url %}
                                                 <img src="{{ logo_url }}" 
-                                                     alt="{{ match.HomeTeam }}" 
+                                                     alt="Logo {{ match.HomeTeam }}" 
                                                      style="width: 24px !important; height: 24px !important; object-fit: cover !important; display: block !important;"
                                                      loading="lazy"
                                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -160,7 +160,7 @@
                                             {% set logo_url = get_team_logo(match.AwayTeam) %}
                                             {% if logo_url %}
                                                 <img src="{{ logo_url }}" 
-                                                     alt="{{ match.AwayTeam }}" 
+                                                     alt="Logo {{ match.AwayTeam }}" 
                                                      style="width: 24px !important; height: 24px !important; object-fit: cover !important; display: block !important;"
                                                      loading="lazy"
                                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -224,7 +224,7 @@
                                                 {% set logo_url = get_team_logo(match.HomeTeam) %}
                                                 {% if logo_url %}
                                                     <img src="{{ logo_url }}" 
-                                                         alt="{{ match.HomeTeam }}" 
+                                                         alt="Logo {{ match.HomeTeam }}" 
                                                          class="team-logo"
                                                          loading="lazy"
                                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
@@ -241,7 +241,7 @@
                                                 {% set logo_url = get_team_logo(match.AwayTeam) %}
                                                 {% if logo_url %}
                                                     <img src="{{ logo_url }}" 
-                                                         alt="{{ match.AwayTeam }}" 
+                                                         alt="Logo {{ match.AwayTeam }}" 
                                                          class="team-logo"
                                                          loading="lazy"
                                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
