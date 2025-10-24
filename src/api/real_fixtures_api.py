@@ -40,6 +40,48 @@ class RealFixturesAPI:
             # Fallback a API gratuita sin key
             return self._get_free_api_matches(days_ahead)
     
+    def test_api_connection(self):
+        """Probar la conexión con la API y verificar ligas disponibles"""
+        try:
+            print(f"🔍 Probando conexión API con key: {self.api_key[:8]}...")
+            
+            # Probar endpoint de competencias
+            url = f"{self.base_url}/competitions"
+            response = requests.get(url, headers=self.headers, timeout=10)
+            
+            if response.status_code == 200:
+                competitions = response.json()
+                print(f"✅ API conectada. Competencias disponibles:")
+                
+                available_leagues = []
+                for comp in competitions.get('competitions', []):
+                    if comp.get('plan') == 'TIER_ONE':  # Solo ligas principales
+                        available_leagues.append({
+                            'id': comp['id'],
+                            'name': comp['name'],
+                            'code': comp.get('code', 'N/A')
+                        })
+                        print(f"  - {comp['name']} (ID: {comp['id']}, Code: {comp.get('code', 'N/A')})")
+                
+                return {
+                    'success': True,
+                    'available_leagues': available_leagues,
+                    'total_competitions': len(competitions.get('competitions', []))
+                }
+            else:
+                print(f"❌ Error API: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f"HTTP {response.status_code}: {response.text}"
+                }
+                
+        except Exception as e:
+            print(f"❌ Error conectando API: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
     def _get_football_data_matches(self, days_ahead):
         """Obtener partidos reales usando Football-Data.org API"""
         fixtures = []

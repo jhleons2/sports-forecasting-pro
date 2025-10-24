@@ -556,6 +556,37 @@ def test():
         'api_status': 'OK' if real_api else 'Not Available'
     }, 200
 
+@app.route('/test-api')
+def test_api():
+    """Endpoint para probar la conexión con la API y verificar ligas disponibles"""
+    try:
+        if not real_api:
+            return jsonify({'error': 'API no disponible'}), 500
+        
+        # Probar conexión y obtener ligas disponibles
+        connection_test = real_api.test_api_connection()
+        
+        # También probar obtener partidos con diferentes rangos de días
+        test_results = {}
+        for days in [1, 3, 7, 14]:
+            try:
+                fixtures = real_api.get_upcoming_matches(days_ahead=days)
+                test_results[f'{days}_days'] = {
+                    'fixtures_count': len(fixtures),
+                    'sample_fixture': fixtures[0] if fixtures else None
+                }
+            except Exception as e:
+                test_results[f'{days}_days'] = {'error': str(e)}
+        
+        return jsonify({
+            'connection_test': connection_test,
+            'fixtures_tests': test_results,
+            'current_league_mapping': real_api.league_ids
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/status')
 def status():
     """Endpoint de estado del sistema"""
