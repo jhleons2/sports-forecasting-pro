@@ -47,7 +47,7 @@ class RealFixturesAPI:
         self.last_request_time = time.time()
     
     def get_upcoming_matches(self, days_ahead=7):
-        """Obtener partidos próximos usando tu API key de Football-Data.org"""
+        """Obtener partidos próximos usando SOLO tu API key de Football-Data.org"""
         try:
             # Verificar cache primero
             cache_key = f"api_fixtures_{days_ahead}"
@@ -57,32 +57,25 @@ class RealFixturesAPI:
                     print(f"📋 Usando datos del cache para {days_ahead} días")
                     return self.cache[cache_key]['data']
             
-            print(f"🔍 Obteniendo partidos REALES con tu API key...")
+            print(f"🔍 Obteniendo partidos REALES con tu API key de Football-Data.org...")
             
             fixtures = []
             
-            # Prioridad 1: Tu API key de Football-Data.org
+            # SOLO usar tu API key de Football-Data.org
             if self.api_key:
                 try:
-                    print("📡 Usando tu API key de Football-Data.org...")
+                    print("📡 Usando SOLO tu API key de Football-Data.org...")
                     self._respect_rate_limit()
                     football_data_fixtures = self._get_football_data_matches(days_ahead)
                     if len(football_data_fixtures) > 0:
                         fixtures.extend(football_data_fixtures)
                         print(f"✅ Obtenidos {len(football_data_fixtures)} partidos de tu API")
+                    else:
+                        print("⚠️ Tu API no devolvió partidos")
                 except Exception as e:
-                    print(f"⚠️ Error con tu API: {e}")
-            
-            # Prioridad 2: The Sport DB como respaldo
-            if len(fixtures) == 0:
-                try:
-                    print("📡 Usando The Sport DB como respaldo...")
-                    sportdb_fixtures = self._get_sportdb_matches_fast(days_ahead)
-                    if len(sportdb_fixtures) > 0:
-                        fixtures.extend(sportdb_fixtures)
-                        print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
-                except Exception as e:
-                    print(f"⚠️ Error con The Sport DB: {e}")
+                    print(f"❌ Error con tu API: {e}")
+            else:
+                print("❌ No hay API key configurada")
             
             # Eliminar duplicados
             unique_fixtures = self._remove_duplicates(fixtures)
@@ -96,7 +89,7 @@ class RealFixturesAPI:
                 print(f"🎯 Total de partidos REALES obtenidos: {len(unique_fixtures)}")
                 return unique_fixtures
             else:
-                print("❌ No se pudieron obtener partidos")
+                print("❌ No se pudieron obtener partidos de tu API")
                 return []
             
         except Exception as e:
@@ -320,123 +313,14 @@ class RealFixturesAPI:
         return fixtures
     
     def _get_sportdb_matches_fast(self, days_ahead):
-        """Obtener partidos de The Sport DB - MODO RÁPIDO"""
-        print("📡 The Sport DB - Modo rápido...")
-        fixtures = []
-        today = datetime.now().date()
-        
-        # Solo usar el endpoint por día (más rápido que por liga)
-        try:
-            # Obtener partidos para hoy y mañana (más rápido)
-            for day_offset in range(min(days_ahead, 3)):  # Solo 3 días máximo
-                target_date = today + timedelta(days=day_offset)
-                date_str = target_date.strftime('%Y-%m-%d')
-                
-                print(f"🔍 Obteniendo partidos para {date_str}...")
-                
-                # Endpoint oficial: Schedule Day
-                url = f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d={date_str}&s=Soccer"
-                response = requests.get(url, timeout=5)  # Timeout más corto
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    events = data.get('events', [])
-                    
-                    for event in events:
-                        try:
-                            # Mapear ligas según el nombre
-                            league_name = event.get('strLeague', '')
-                            league_code = self._map_league_name_to_code(league_name)
-                            
-                            if league_code:  # Solo incluir ligas que conocemos
-                                fixtures.append({
-                                    'HomeTeam': event['strHomeTeam'],
-                                    'AwayTeam': event['strAwayTeam'],
-                                    'Date': event['dateEvent'],
-                                    'Time': event.get('strTime', '15:00'),
-                                    'League': league_code,
-                                    'Competition': league_name,
-                                    'Status': 'SCHEDULED',
-                                    'Source': 'The Sport DB (Fast)',
-                                    'EventID': event.get('idEvent', ''),
-                                    'Venue': event.get('strVenue', ''),
-                                    'Country': event.get('strCountry', '')
-                                })
-                        except Exception as e:
-                            continue
-                    
-                    print(f"✅ Obtenidos {len(events)} eventos para {date_str}")
-                
-                # Delay mínimo entre requests
-                time.sleep(1)
-                
-        except Exception as e:
-            print(f"❌ Error en modo rápido: {e}")
-        
-        print(f"📊 Total partidos (modo rápido): {len(fixtures)}")
-        return fixtures
+        """MÉTODO DESHABILITADO - Solo usar Football-Data.org"""
+        print("❌ The Sport DB deshabilitado - Solo usando Football-Data.org")
+        return []
     
     def _get_sportdb_daily_matches(self, days_ahead):
-        """Obtener partidos por día usando The Sport DB - Endpoint Schedule Day"""
-        print("📅 Consultando The Sport DB por días específicos...")
-        fixtures = []
-        today = datetime.now().date()
-        
-        # Obtener partidos para cada día en el rango
-        for day_offset in range(days_ahead + 1):
-            target_date = today + timedelta(days=day_offset)
-            date_str = target_date.strftime('%Y-%m-%d')
-            
-            try:
-                print(f"🔍 Obteniendo partidos para {date_str}...")
-                
-                # Endpoint oficial: Schedule Day
-                url = f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d={date_str}&s=Soccer"
-                response = requests.get(url, timeout=10)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    events = data.get('events', [])
-                    
-                    for event in events:
-                        try:
-                            # Mapear ligas según el nombre
-                            league_name = event.get('strLeague', '')
-                            league_code = self._map_league_name_to_code(league_name)
-                            
-                            if league_code:  # Solo incluir ligas que conocemos
-                                fixtures.append({
-                                    'HomeTeam': event['strHomeTeam'],
-                                    'AwayTeam': event['strAwayTeam'],
-                                    'Date': event['dateEvent'],
-                                    'Time': event.get('strTime', '15:00'),
-                                    'League': league_code,
-                                    'Competition': league_name,
-                                    'Status': 'SCHEDULED',
-                                    'Source': 'The Sport DB (Daily)',
-                                    'EventID': event.get('idEvent', ''),
-                                    'Venue': event.get('strVenue', ''),
-                                    'Country': event.get('strCountry', '')
-                                })
-                        except Exception as e:
-                            continue
-                    
-                    print(f"✅ Obtenidos {len(events)} eventos para {date_str}")
-                
-                elif response.status_code == 429:
-                    print(f"⚠️ Límite de requests alcanzado para {date_str}")
-                    time.sleep(5)
-                    continue
-                
-                # Respetar límite de requests
-                time.sleep(2)
-                
-            except Exception as e:
-                print(f"❌ Error obteniendo partidos para {date_str}: {e}")
-                continue
-        
-        print(f"📊 Total partidos diarios de The Sport DB: {len(fixtures)}")
-        return fixtures
+        """MÉTODO DESHABILITADO - Solo usar Football-Data.org"""
+        print("❌ The Sport DB Daily deshabilitado - Solo usando Football-Data.org")
+        return []
     
     def _map_league_name_to_code(self, league_name):
         """Mapear nombres de ligas a códigos estándar - MEJORADO"""
