@@ -1,19 +1,11 @@
-# Railway Configuration
-# Configuración específica para Railway
-
 [build]
-builder = "DOCKERFILE"
+builder = "NIXPACKS"
 
 [deploy]
-startCommand = "./start.sh"
+startCommand = "python main.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
 
 [env]
 PORT = 8080
 FLASK_ENV = "production"
-FLASK_DEBUG = "False"
-PYTHONPATH = "/app"
-HOST = "0.0.0.0"
