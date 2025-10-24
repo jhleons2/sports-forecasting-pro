@@ -6,6 +6,9 @@ startCommand = "python main.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 
+[build.env]
+PIP_REQUIREMENTS_FILE = "requirements-railway.txt"
+
 [env]
 PORT = 8080
 FLASK_ENV = "production"
