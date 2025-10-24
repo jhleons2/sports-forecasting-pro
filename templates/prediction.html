@@ -144,6 +144,302 @@
                     </div>
                 </div>
 
+                <!-- Pronósticos Adicionales con Tabs -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-gradient-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar mr-2"></i> Pronósticos Adicionales
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Nav Tabs -->
+                                <ul class="nav nav-tabs nav-fill mb-4" id="predictionTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="goals-tab" data-toggle="tab" href="#goals" role="tab">
+                                            <i class="fas fa-futbol mr-1"></i> Goles
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="cards-tab" data-toggle="tab" href="#cards" role="tab">
+                                            <i class="fas fa-id-card mr-1"></i> Tarjetas
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="shots-tab" data-toggle="tab" href="#shots" role="tab">
+                                            <i class="fas fa-crosshairs mr-1"></i> Tiros
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="corners-tab" data-toggle="tab" href="#corners" role="tab">
+                                            <i class="fas fa-square mr-1"></i> Esquinas
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="possession-tab" data-toggle="tab" href="#possession" role="tab">
+                                            <i class="fas fa-percentage mr-1"></i> Posesión
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <!-- Tab Content -->
+                                <div class="tab-content" id="predictionTabsContent">
+                                    <!-- Goles Tab -->
+                                    <div class="tab-pane fade show active" id="goals" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Total Goles</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">2.5</span>
+                                                        <small class="text-muted">Over/Under</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>Over 2.5</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 65%"></div>
+                                                            </div>
+                                                            <span class="percentage">65%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>Under 2.5</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-danger" style="width: 35%"></div>
+                                                            </div>
+                                                            <span class="percentage">35%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Goles Local</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">1.4</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>0-1 Goles</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-warning" style="width: 30%"></div>
+                                                            </div>
+                                                            <span class="percentage">30%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>2+ Goles</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 70%"></div>
+                                                            </div>
+                                                            <span class="percentage">70%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Goles Visitante</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">1.1</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>0-1 Goles</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 80%"></div>
+                                                            </div>
+                                                            <span class="percentage">80%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>2+ Goles</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-warning" style="width: 20%"></div>
+                                                            </div>
+                                                            <span class="percentage">20%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tarjetas Tab -->
+                                    <div class="tab-pane fade" id="cards" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Tarjetas Amarillas</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-warning">4.2</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>0-3 Tarjetas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 25%"></div>
+                                                            </div>
+                                                            <span class="percentage">25%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>4+ Tarjetas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-warning" style="width: 75%"></div>
+                                                            </div>
+                                                            <span class="percentage">75%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Tarjetas Rojas</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-danger">0.3</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>Sin Rojas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 85%"></div>
+                                                            </div>
+                                                            <span class="percentage">85%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>1+ Rojas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-danger" style="width: 15%"></div>
+                                                            </div>
+                                                            <span class="percentage">15%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tiros Tab -->
+                                    <div class="tab-pane fade" id="shots" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Total Tiros</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">22.5</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Tiros Local</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">12.8</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Tiros Visitante</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">9.7</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Esquinas Tab -->
+                                    <div class="tab-pane fade" id="corners" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Total Esquinas</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">9.5</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>0-8 Esquinas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-warning" style="width: 40%"></div>
+                                                            </div>
+                                                            <span class="percentage">40%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>9+ Esquinas</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 60%"></div>
+                                                            </div>
+                                                            <span class="percentage">60%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Esquinas Local</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">5.2</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Posesión Tab -->
+                                    <div class="tab-pane fade" id="possession" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Posesión Local</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">52%</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                    <div class="prediction-bars">
+                                                        <div class="bar-item">
+                                                            <span>Menos del 50%</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-warning" style="width: 30%"></div>
+                                                            </div>
+                                                            <span class="percentage">30%</span>
+                                                        </div>
+                                                        <div class="bar-item">
+                                                            <span>50% o más</span>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-success" style="width: 70%"></div>
+                                                            </div>
+                                                            <span class="percentage">70%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="prediction-mini-card">
+                                                    <h6 class="text-muted">Posesión Visitante</h6>
+                                                    <div class="prediction-value">
+                                                        <span class="h4 text-primary">48%</span>
+                                                        <small class="text-muted">Promedio</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Información del Modelo -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -355,6 +651,106 @@
 
 .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+/* Estilos para tabs de pronósticos */
+.nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    border: none;
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+    border-bottom: 3px solid #007bff;
+    font-weight: 600;
+}
+
+/* Estilos para mini-cards de pronósticos */
+.prediction-mini-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    height: 100%;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.prediction-mini-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.prediction-mini-card h6 {
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.prediction-value {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.prediction-value .h4 {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.prediction-bars {
+    margin-top: 15px;
+}
+
+.bar-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.bar-item span:first-child {
+    flex: 1;
+    font-weight: 500;
+}
+
+.bar-item .progress {
+    flex: 2;
+    height: 8px;
+    margin: 0 10px;
+    background-color: #e9ecef;
+}
+
+.bar-item .percentage {
+    flex: 0 0 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Estilos para badges grandes */
+.badge-lg {
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 25px;
 }
 
 .badge-lg {
