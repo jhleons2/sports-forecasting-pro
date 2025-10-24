@@ -457,56 +457,8 @@ def _get_minimal_official_fixtures():
     
     print("📅 Generando partidos del calendario oficial real...")
     
-    # Partidos oficiales confirmados para los próximos días - DATOS REALES
-    official_fixtures = [
-        # Premier League - Partidos oficiales confirmados (temporada 2024-25)
-        ('Arsenal', 'Chelsea', today + timedelta(days=1), 'E0', 'Premier League', '15:00'),
-        ('Liverpool', 'Brighton', today + timedelta(days=2), 'E0', 'Premier League', '17:30'),
-        ('Manchester City', 'Newcastle', today + timedelta(days=3), 'E0', 'Premier League', '14:00'),
-        ('Tottenham', 'West Ham', today + timedelta(days=4), 'E0', 'Premier League', '16:30'),
-        ('Manchester United', 'Aston Villa', today + timedelta(days=5), 'E0', 'Premier League', '15:00'),
-        
-        # La Liga - Partidos oficiales confirmados (temporada 2024-25)
-        ('Real Madrid', 'Barcelona', today + timedelta(days=1), 'SP1', 'La Liga', '16:00'),
-        ('Atletico Madrid', 'Sevilla', today + timedelta(days=2), 'SP1', 'La Liga', '18:30'),
-        ('Valencia', 'Real Sociedad', today + timedelta(days=3), 'SP1', 'La Liga', '15:00'),
-        ('Villarreal', 'Athletic Bilbao', today + timedelta(days=4), 'SP1', 'La Liga', '17:30'),
-        ('Real Betis', 'Osasuna', today + timedelta(days=5), 'SP1', 'La Liga', '16:00'),
-        
-        # Bundesliga - Partidos oficiales confirmados (temporada 2024-25)
-        ('Bayern Munich', 'Borussia Dortmund', today + timedelta(days=2), 'D1', 'Bundesliga', '17:30'),
-        ('RB Leipzig', 'Bayer Leverkusen', today + timedelta(days=3), 'D1', 'Bundesliga', '15:30'),
-        ('Eintracht Frankfurt', 'Borussia Mönchengladbach', today + timedelta(days=4), 'D1', 'Bundesliga', '14:30'),
-        ('Wolfsburg', 'Union Berlin', today + timedelta(days=5), 'D1', 'Bundesliga', '16:00'),
-        ('Freiburg', 'Hoffenheim', today + timedelta(days=6), 'D1', 'Bundesliga', '15:30'),
-        
-        # Serie A - Partidos oficiales confirmados (temporada 2024-25)
-        ('Juventus', 'Inter Milan', today + timedelta(days=1), 'I1', 'Serie A', '18:45'),
-        ('AC Milan', 'Napoli', today + timedelta(days=2), 'I1', 'Serie A', '20:45'),
-        ('Roma', 'Lazio', today + timedelta(days=3), 'I1', 'Serie A', '18:30'),
-        ('Atalanta', 'Fiorentina', today + timedelta(days=4), 'I1', 'Serie A', '17:00'),
-        ('Bologna', 'Torino', today + timedelta(days=5), 'I1', 'Serie A', '15:00'),
-        
-        # Ligue 1 - Partidos oficiales confirmados (temporada 2024-25)
-        ('Paris Saint-Germain', 'Marseille', today + timedelta(days=1), 'F1', 'Ligue 1', '21:00'),
-        ('Lyon', 'Monaco', today + timedelta(days=2), 'F1', 'Ligue 1', '17:00'),
-        ('Lille', 'Nice', today + timedelta(days=3), 'F1', 'Ligue 1', '19:00'),
-        ('Rennes', 'Lens', today + timedelta(days=4), 'F1', 'Ligue 1', '17:00'),
-        ('Strasbourg', 'Montpellier', today + timedelta(days=5), 'F1', 'Ligue 1', '19:00'),
-    ]
-    
-    for home, away, date, league, competition, time in official_fixtures:
-        fixtures.append({
-            'HomeTeam': home,
-            'AwayTeam': away,
-            'Date': date.strftime('%Y-%m-%d'),
-            'Time': time,
-            'League': league,
-            'Competition': competition,
-            'Status': 'SCHEDULED'
-        })
-    
-    print(f"✅ Generados {len(fixtures)} partidos del calendario oficial")
+    # DATOS HARDCODEADOS ELIMINADOS - Solo usar API real
+    print("✅ No hay datos hardcodeados - Solo usando API real")
     return fixtures
 
 @app.route('/alerts')
