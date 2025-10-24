@@ -677,24 +677,92 @@ def status():
 
 @app.route('/sync')
 def sync():
-    """Endpoint ultra-simple para sincronizar datos"""
+    """Endpoint para sincronizar datos usando tu API real"""
     try:
-        print("🔄 Sincronizando datos (modo simple)...")
+        print("🔄 Sincronizando datos con tu API real...")
         
-        # Siempre devolver datos válidos
-        today = datetime.now().date()
-        fixtures = [{
-            'HomeTeam': 'Arsenal',
-            'AwayTeam': 'Chelsea',
-            'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
-            'Time': '15:00',
-            'League': 'E0',
-            'Competition': 'Premier League',
-            'Status': 'SCHEDULED',
-            'Source': 'Sistema de respaldo'
-        }]
+        fixtures = []
         
-        print(f"✅ Devolviendo {len(fixtures)} partidos")
+        # Usar tu API real si está disponible
+        if real_api:
+            try:
+                # Obtener datos de Premier League
+                print("🔍 Obteniendo Premier League...")
+                pl_url = f"{real_api.base_url}/competitions/PL/matches"
+                headers = {'X-Auth-Token': real_api.api_key}
+                
+                today = datetime.now().date()
+                from datetime import timedelta
+                params = {
+                    'dateFrom': today.isoformat(),
+                    'dateTo': (today + timedelta(days=7)).isoformat(),
+                    'status': 'TIMED'  # Partidos programados
+                }
+                
+                response = requests.get(pl_url, headers=headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    matches = data.get('matches', [])
+                    
+                    for match in matches:
+                        fixtures.append({
+                            'HomeTeam': match['homeTeam']['name'],
+                            'AwayTeam': match['awayTeam']['name'],
+                            'Date': match['utcDate'][:10],  # Solo la fecha
+                            'Time': match['utcDate'][11:16],  # Solo la hora
+                            'League': 'E0',
+                            'Competition': 'Premier League',
+                            'Status': 'SCHEDULED',
+                            'Source': 'Football-Data.org API'
+                        })
+                    
+                    print(f"✅ Premier League: {len(matches)} partidos")
+                
+                # Obtener datos de La Liga
+                print("🔍 Obteniendo La Liga...")
+                pd_url = f"{real_api.base_url}/competitions/PD/matches"
+                
+                response = requests.get(pd_url, headers=headers, params=params, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    matches = data.get('matches', [])
+                    
+                    for match in matches:
+                        fixtures.append({
+                            'HomeTeam': match['homeTeam']['name'],
+                            'AwayTeam': match['awayTeam']['name'],
+                            'Date': match['utcDate'][:10],
+                            'Time': match['utcDate'][11:16],
+                            'League': 'SP1',
+                            'Competition': 'La Liga',
+                            'Status': 'SCHEDULED',
+                            'Source': 'Football-Data.org API'
+                        })
+                    
+                    print(f"✅ La Liga: {len(matches)} partidos")
+                
+            except Exception as api_error:
+                print(f"❌ Error con API: {api_error}")
+                fixtures = []
+        
+        # Si no hay datos de la API, usar respaldo mínimo
+        if len(fixtures) == 0:
+            print("⚠️ Usando respaldo mínimo")
+            today = datetime.now().date()
+            fixtures = [{
+                'HomeTeam': 'Arsenal',
+                'AwayTeam': 'Chelsea',
+                'Date': (today + timedelta(days=1)).strftime('%Y-%m-%d'),
+                'Time': '15:00',
+                'League': 'E0',
+                'Competition': 'Premier League',
+                'Status': 'SCHEDULED',
+                'Source': 'Respaldo mínimo'
+            }]
+        
+        print(f"✅ Total partidos: {len(fixtures)}")
         
         return jsonify({
             'success': True,
@@ -705,7 +773,7 @@ def sync():
         
     except Exception as e:
         print(f"❌ Error crítico: {e}")
-        # Respaldo de emergencia absoluto
+        # Respaldo de emergencia
         return jsonify({
             'success': True,
             'fixtures': [{
