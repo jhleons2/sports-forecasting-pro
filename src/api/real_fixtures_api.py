@@ -46,53 +46,68 @@ class RealFixturesAPI:
         self.last_request_time = time.time()
     
     def get_upcoming_matches(self, days_ahead=7):
-        """Obtener partidos próximos reales de APIs gratuitas con cache y límite de requests"""
+        """Obtener partidos próximos de múltiples fuentes gratuitas - SOLO DATOS REALES"""
         try:
             # Verificar cache primero
-            cache_key = f"fixtures_{days_ahead}"
+            cache_key = f"api_fixtures_{days_ahead}"
             if cache_key in self.cache:
                 cache_time = self.cache[cache_key]['timestamp']
-                if time.time() - cache_time < 300:  # Cache válido por 5 minutos
+                if time.time() - cache_time < 600:  # Cache válido por 10 minutos
                     print(f"📋 Usando datos del cache para {days_ahead} días")
                     return self.cache[cache_key]['data']
             
-            print(f"🔍 Obteniendo partidos para {days_ahead} días...")
+            print(f"🔍 Obteniendo partidos REALES de fuentes gratuitas para {days_ahead} días...")
             
-            # Intentar API real con límite de requests
+            # Intentar múltiples fuentes gratuitas
+            fixtures = []
+            
+            # Fuente 1: Football-Data.org (si tienes API key)
             if self.api_key:
-                self._respect_rate_limit()  # Respetar límite de API
-                fixtures = self._get_football_data_matches(days_ahead)
-                
-                if len(fixtures) > 0:
-                    # Guardar en cache
-                    self.cache[cache_key] = {
-                        'data': fixtures,
-                        'timestamp': time.time()
-                    }
-                    print(f"✅ Obtenidos {len(fixtures)} partidos de API real")
-                    return fixtures
-                else:
-                    print("⚠️ API no retornó partidos, usando datos reales de respaldo")
+                try:
+                    self._respect_rate_limit()
+                    football_data_fixtures = self._get_football_data_matches(days_ahead)
+                    if len(football_data_fixtures) > 0:
+                        fixtures.extend(football_data_fixtures)
+                        print(f"✅ Obtenidos {len(football_data_fixtures)} partidos de Football-Data.org")
+                except Exception as e:
+                    print(f"⚠️ Error con Football-Data.org: {e}")
+            
+            # Fuente 2: The Sport DB (completamente gratuito)
+            try:
+                sportdb_fixtures = self._get_sportdb_matches(days_ahead)
+                if len(sportdb_fixtures) > 0:
+                    fixtures.extend(sportdb_fixtures)
+                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
+            except Exception as e:
+                print(f"⚠️ Error con The Sport DB: {e}")
+            
+            # Fuente 3: FootyStats (gratuito con límite)
+            try:
+                footystats_fixtures = self._get_footystats_matches(days_ahead)
+                if len(footystats_fixtures) > 0:
+                    fixtures.extend(footystats_fixtures)
+                    print(f"✅ Obtenidos {len(footystats_fixtures)} partidos de FootyStats")
+            except Exception as e:
+                print(f"⚠️ Error con FootyStats: {e}")
+            
+            # Eliminar duplicados basado en equipos y fecha
+            unique_fixtures = self._remove_duplicates(fixtures)
+            
+            if len(unique_fixtures) > 0:
+                # Guardar en cache
+                self.cache[cache_key] = {
+                    'data': unique_fixtures,
+                    'timestamp': time.time()
+                }
+                print(f"🎯 Total de partidos REALES únicos obtenidos: {len(unique_fixtures)}")
+                return unique_fixtures
             else:
-                print("❌ API no disponible, usando datos reales de respaldo")
-            
-            # Usar datos reales de calendarios oficiales como respaldo
-            fixtures = self._get_real_calendar_fixtures(days_ahead)
-            
-            # Guardar en cache
-            self.cache[cache_key] = {
-                'data': fixtures,
-                'timestamp': time.time()
-            }
-            
-            print(f"✅ Obtenidos {len(fixtures)} partidos de calendario oficial")
-            return fixtures
+                print("❌ No se pudieron obtener partidos de ninguna fuente")
+                return []
             
         except Exception as e:
-            print(f"⚠️ Error obteniendo partidos: {e}")
-            # Fallback a datos reales garantizados
-            fixtures = self._get_real_calendar_fixtures(days_ahead)
-            return fixtures
+            print(f"❌ Error obteniendo datos: {e}")
+            return []
     
     def test_api_connection(self):
         """Probar la conexión con la API y verificar ligas disponibles"""
@@ -136,60 +151,8 @@ class RealFixturesAPI:
                 'error': str(e)
             }
     
-    def _get_real_calendar_fixtures(self, days_ahead):
-        """Obtener partidos reales del calendario oficial de las ligas"""
-        print("📅 Obteniendo partidos del calendario oficial real...")
-        fixtures = []
-        today = datetime.now().date()
-        
-        # Partidos reales de las principales ligas europeas - TEMPORADA ACTUAL 2024-25
-        # Estos son partidos que realmente están programados según calendarios oficiales
-        real_fixtures = [
-            # Premier League - Partidos oficiales confirmados
-            ('Arsenal', 'Chelsea', today + timedelta(days=1), '15:00', 'E0', 'Premier League'),
-            ('Liverpool', 'Brighton', today + timedelta(days=2), '17:30', 'E0', 'Premier League'),
-            ('Manchester City', 'Newcastle', today + timedelta(days=3), '14:00', 'E0', 'Premier League'),
-            ('Tottenham', 'West Ham', today + timedelta(days=4), '16:30', 'E0', 'Premier League'),
-            ('Manchester United', 'Aston Villa', today + timedelta(days=5), '15:00', 'E0', 'Premier League'),
-            ('Everton', 'Fulham', today + timedelta(days=6), '15:00', 'E0', 'Premier League'),
-            
-            # La Liga - Partidos oficiales confirmados
-            ('Real Madrid', 'Barcelona', today + timedelta(days=1), '16:00', 'SP1', 'La Liga'),
-            ('Atletico Madrid', 'Sevilla', today + timedelta(days=2), '18:30', 'SP1', 'La Liga'),
-            ('Valencia', 'Real Sociedad', today + timedelta(days=3), '15:00', 'SP1', 'La Liga'),
-            ('Villarreal', 'Athletic Bilbao', today + timedelta(days=4), '17:30', 'SP1', 'La Liga'),
-            
-            # Bundesliga - Partidos oficiales confirmados
-            ('Bayern Munich', 'Borussia Dortmund', today + timedelta(days=2), '17:30', 'D1', 'Bundesliga'),
-            ('RB Leipzig', 'Bayer Leverkusen', today + timedelta(days=3), '15:30', 'D1', 'Bundesliga'),
-            ('Eintracht Frankfurt', 'Borussia Mönchengladbach', today + timedelta(days=4), '14:30', 'D1', 'Bundesliga'),
-            
-            # Serie A - Partidos oficiales confirmados
-            ('Juventus', 'AC Milan', today + timedelta(days=1), '20:45', 'I1', 'Serie A'),
-            ('Inter Milan', 'Napoli', today + timedelta(days=2), '18:00', 'I1', 'Serie A'),
-            ('Roma', 'Lazio', today + timedelta(days=3), '18:00', 'I1', 'Serie A'),
-            
-            # Ligue 1 - Partidos oficiales confirmados
-            ('PSG', 'Marseille', today + timedelta(days=1), '21:00', 'F1', 'Ligue 1'),
-            ('Lyon', 'Monaco', today + timedelta(days=3), '17:00', 'F1', 'Ligue 1'),
-            ('Nice', 'Lille', today + timedelta(days=4), '19:00', 'F1', 'Ligue 1'),
-        ]
-        
-        for home, away, date, time, league_code, competition in real_fixtures:
-            fixtures.append({
-                'HomeTeam': home,
-                'AwayTeam': away,
-                'Date': date.strftime('%Y-%m-%d'),
-                'Time': time,
-                'League': league_code,
-                'Competition': competition,
-                'Status': 'SCHEDULED',
-                'Source': 'Official Calendar 2024-25'
-            })
-        
-        return fixtures
-    
     def _get_football_data_matches(self, days_ahead):
+        """Obtener partidos reales usando Football-Data.org API - SOLO DATOS REALES"""
         fixtures = []
         today = datetime.now().date()
         date_to = today + timedelta(days=days_ahead)
@@ -207,7 +170,7 @@ class RealFixturesAPI:
                     'status': 'SCHEDULED'
                 }
                 
-                response = requests.get(url, headers=self.headers, params=params, timeout=10)
+                response = requests.get(url, headers=self.headers, params=params, timeout=15)
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -224,21 +187,147 @@ class RealFixturesAPI:
                                 'Time': match_date.strftime('%H:%M'),
                                 'League': league_code,
                                 'Competition': match['competition']['name'],
-                                'Status': match['status']
+                                'Status': match['status'],
+                                'Source': 'Football-Data.org API'
                             })
                     
                     print(f"✅ Agregados {len([m for m in matches if m['status'] == 'SCHEDULED'])} partidos programados para {league_code}")
+                    
+                elif response.status_code == 429:
+                    print(f"⚠️ Límite de requests alcanzado para {league_code}")
+                    print("⏳ Esperando 10 segundos antes de continuar...")
+                    time.sleep(10)
+                    continue
+                    
+                elif response.status_code == 403:
+                    print(f"❌ Acceso denegado para {league_code} - verifica tu API key")
+                    continue
+                    
                 else:
                     print(f"⚠️ Error API {league_code}: {response.status_code} - {response.text}")
                 
-                time.sleep(1)  # Respetar límite de rate (10 requests/min)
+                # Respetar límite de requests entre ligas
+                time.sleep(2)
                 
             except Exception as e:
                 print(f"❌ Error obteniendo partidos de {league_code}: {e}")
                 continue
         
-        print(f"🎯 Total de partidos obtenidos de API: {len(fixtures)}")
+        print(f"🎯 Total de partidos REALES obtenidos de API: {len(fixtures)}")
         return fixtures
+    
+    def _get_sportdb_matches(self, days_ahead):
+        """Obtener partidos de The Sport DB - COMPLETAMENTE GRATUITO"""
+        print("📡 Consultando The Sport DB (gratuito)...")
+        fixtures = []
+        today = datetime.now().date()
+        
+        # IDs de ligas en The Sport DB
+        sportdb_leagues = {
+            'E0': '4328',  # Premier League
+            'SP1': '4335', # La Liga
+            'D1': '4331',  # Bundesliga
+            'I1': '4332',  # Serie A
+            'F1': '4334'   # Ligue 1
+        }
+        
+        for league_code, league_id in sportdb_leagues.items():
+            try:
+                print(f"🔍 Obteniendo partidos de {league_code} desde The Sport DB...")
+                
+                url = f"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id={league_id}"
+                response = requests.get(url, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    events = data.get('events', [])
+                    
+                    for event in events[:10]:  # Limitar a 10 partidos por liga
+                        event_date = datetime.strptime(event['dateEvent'], '%Y-%m-%d').date()
+                        
+                        # Solo partidos futuros dentro del rango
+                        if today <= event_date <= today + timedelta(days=days_ahead):
+                            fixtures.append({
+                                'HomeTeam': event['strHomeTeam'],
+                                'AwayTeam': event['strAwayTeam'],
+                                'Date': event['dateEvent'],
+                                'Time': event.get('strTime', '15:00'),
+                                'League': league_code,
+                                'Competition': event.get('strLeague', 'Unknown'),
+                                'Status': 'SCHEDULED',
+                                'Source': 'The Sport DB'
+                            })
+                    
+                    print(f"✅ Obtenidos {len([e for e in events[:10] if datetime.strptime(e['dateEvent'], '%Y-%m-%d').date() <= today + timedelta(days=days_ahead)])} partidos de {league_code}")
+                
+                time.sleep(1)  # Respetar límite de requests
+                
+            except Exception as e:
+                print(f"❌ Error obteniendo {league_code} de The Sport DB: {e}")
+                continue
+        
+        print(f"📊 Total partidos de The Sport DB: {len(fixtures)}")
+        return fixtures
+    
+    def _get_footystats_matches(self, days_ahead):
+        """Obtener partidos de FootyStats - GRATUITO CON LÍMITE"""
+        print("📡 Consultando FootyStats (gratuito con límite)...")
+        fixtures = []
+        
+        try:
+            # FootyStats tiene un endpoint gratuito limitado
+            url = "https://api.footystats.org/api/v1/league/upcoming-matches"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                matches = data.get('data', [])
+                
+                today = datetime.now().date()
+                for match in matches[:20]:  # Limitar a 20 partidos
+                    try:
+                        match_date = datetime.strptime(match['date'], '%Y-%m-%d').date()
+                        
+                        if today <= match_date <= today + timedelta(days=days_ahead):
+                            fixtures.append({
+                                'HomeTeam': match['homeTeam']['name'],
+                                'AwayTeam': match['awayTeam']['name'],
+                                'Date': match['date'],
+                                'Time': match.get('time', '15:00'),
+                                'League': match.get('league', {}).get('name', 'Unknown'),
+                                'Competition': match.get('league', {}).get('name', 'Unknown'),
+                                'Status': 'SCHEDULED',
+                                'Source': 'FootyStats'
+                            })
+                    except Exception as e:
+                        continue
+                
+                print(f"✅ Obtenidos {len(fixtures)} partidos de FootyStats")
+            
+        except Exception as e:
+            print(f"❌ Error con FootyStats: {e}")
+        
+        return fixtures
+    
+    def _remove_duplicates(self, fixtures):
+        """Eliminar partidos duplicados basado en equipos y fecha"""
+        unique_fixtures = []
+        seen = set()
+        
+        for fixture in fixtures:
+            # Crear clave única basada en equipos y fecha
+            key = f"{fixture['HomeTeam']}_{fixture['AwayTeam']}_{fixture['Date']}"
+            
+            if key not in seen:
+                seen.add(key)
+                unique_fixtures.append(fixture)
+        
+        print(f"🔄 Eliminados {len(fixtures) - len(unique_fixtures)} duplicados")
+        return unique_fixtures
     
     def _get_free_api_matches(self, days_ahead):
         """Usar API completamente gratuita sin key"""
