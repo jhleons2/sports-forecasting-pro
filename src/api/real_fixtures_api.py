@@ -229,14 +229,44 @@ class RealFixturesAPI:
         fixtures = []
         today = datetime.now().date()
         
-        # IDs de ligas principales según documentación oficial
+        # IDs de ligas principales - CORREGIDOS según The Sports DB
         sportdb_leagues = {
-            'E0': '4328',  # Premier League
+            'E0': '4328',  # Premier League (verificar si es correcto)
             'SP1': '4335', # La Liga  
             'D1': '4331',  # Bundesliga
             'I1': '4332',  # Serie A
             'F1': '4334'   # Ligue 1
         }
+        
+        # Primero verificar qué liga es realmente el ID 4328
+        print("🔍 Verificando ID de liga 4328...")
+        test_url = f"https://www.thesportsdb.com/api/v1/json/123/lookupleague.php?id=4328"
+        try:
+            test_response = requests.get(test_url, timeout=10)
+            if test_response.status_code == 200:
+                test_data = test_response.json()
+                league_info = test_data.get('leagues', [{}])[0]
+                league_name = league_info.get('strLeague', 'Unknown')
+                print(f"📊 ID 4328 corresponde a: {league_name}")
+                
+                # Si no es Premier League, buscar el ID correcto
+                if 'Premier League' not in league_name:
+                    print("⚠️ ID 4328 no es Premier League, buscando ID correcto...")
+                    # Buscar Premier League en la lista de ligas
+                    all_leagues_url = "https://www.thesportsdb.com/api/v1/json/123/all_leagues.php"
+                    leagues_response = requests.get(all_leagues_url, timeout=10)
+                    if leagues_response.status_code == 200:
+                        leagues_data = leagues_response.json()
+                        all_leagues = leagues_data.get('leagues', [])
+                        
+                        for league in all_leagues:
+                            if 'Premier League' in league.get('strLeague', ''):
+                                correct_id = league.get('idLeague', '')
+                                print(f"✅ Premier League ID correcto: {correct_id}")
+                                sportdb_leagues['E0'] = correct_id
+                                break
+        except Exception as e:
+            print(f"⚠️ Error verificando IDs de ligas: {e}")
         
         # Usar el endpoint oficial para próximos partidos de liga
         for league_code, league_id in sportdb_leagues.items():
@@ -359,23 +389,52 @@ class RealFixturesAPI:
         return fixtures
     
     def _map_league_name_to_code(self, league_name):
-        """Mapear nombres de ligas a códigos estándar"""
+        """Mapear nombres de ligas a códigos estándar - MEJORADO"""
         league_mapping = {
+            # Premier League
             'English Premier League': 'E0',
             'Premier League': 'E0',
+            'EPL': 'E0',
+            
+            # La Liga
             'La Liga': 'SP1',
             'Primera Division': 'SP1',
+            'Spanish La Liga': 'SP1',
+            
+            # Bundesliga
             'Bundesliga': 'D1',
+            'German Bundesliga': 'D1',
+            
+            # Serie A
             'Serie A': 'I1',
+            'Italian Serie A': 'I1',
+            
+            # Ligue 1
             'Ligue 1': 'F1',
+            'French Ligue 1': 'F1',
+            
+            # Champions League
             'Champions League': 'CL',
-            'Europa League': 'EL'
+            'UEFA Champions League': 'CL',
+            
+            # Europa League
+            'Europa League': 'EL',
+            'UEFA Europa League': 'EL',
+            
+            # Evitar League One y Championship
+            'League One': None,
+            'Championship': None,
+            'League Two': None
         }
         
+        league_name_lower = league_name.lower()
+        
         for key, code in league_mapping.items():
-            if key.lower() in league_name.lower():
+            if key.lower() in league_name_lower:
                 return code
         
+        # Si no encuentra coincidencia, retornar None para evitar ligas desconocidas
+        print(f"⚠️ Liga no reconocida: {league_name}")
         return None
     
     def _get_footystats_matches(self, days_ahead):
