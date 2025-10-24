@@ -1,1 +1,1 @@
-web: chmod +x start_railway.sh && ./start_railway.sh
+web: python app_ultra_simple.py

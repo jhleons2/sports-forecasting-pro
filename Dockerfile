@@ -30,8 +30,5 @@ ENV FLASK_DEBUG=False
 # Expose port
 EXPOSE 8080
 
-# Make start script executable
-RUN chmod +x start_railway.sh
-
 # Run the application
-CMD ["./start_railway.sh"]
+CMD ["python", "app_ultra_simple.py"]
