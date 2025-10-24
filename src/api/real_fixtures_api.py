@@ -8,22 +8,24 @@ class RealFixturesAPI:
     """API para obtener partidos reales de fútbol usando únicamente datos reales"""
     
     def __init__(self):
-        # Usar API gratuita de Football-Data.org (tier gratuito: 10 requests/min)
-        self.api_key = os.environ.get('FOOTBALL_API_KEY', '')  # Configurar en Railway
+        # Usar API gratuita de Football-Data.org con tu API key
+        self.api_key = os.environ.get('FOOTBALL_API_KEY', '2b1693b0c9ba4a99bf8346cd0a9d27d0')  # Tu API key
         self.base_url = "https://api.football-data.org/v4"
         self.headers = {
             'X-Auth-Token': self.api_key,
             'Content-Type': 'application/json'
         }
         
-        # IDs de las principales ligas europeas
+        # IDs de las principales ligas europeas (según tu cuenta)
         self.league_ids = {
-            'E0': 2021,  # Premier League
-            'SP1': 2014, # La Liga
-            'D1': 2002,  # Bundesliga
-            'I1': 2019,  # Serie A
-            'F1': 2015   # Ligue 1
+            'E0': 'PL',  # Premier League
+            'SP1': 'PD', # Primera Division (La Liga)
+            'D1': 'BL1', # Bundesliga
+            'I1': 'SA',  # Serie A
+            'F1': 'FL1'  # Ligue 1
         }
+        
+        print(f"🔑 API configurada con key: {self.api_key[:8]}...")
         
     def get_upcoming_matches(self, days_ahead=7):
         """Obtener partidos próximos reales de APIs gratuitas"""
@@ -44,8 +46,12 @@ class RealFixturesAPI:
         today = datetime.now().date()
         date_to = today + timedelta(days=days_ahead)
         
+        print(f"📡 Consultando API Football-Data.org desde {today} hasta {date_to}")
+        
         for league_code, league_id in self.league_ids.items():
             try:
+                print(f"🔍 Obteniendo partidos para {league_code} ({league_id})...")
+                
                 url = f"{self.base_url}/competitions/{league_id}/matches"
                 params = {
                     'dateFrom': today.isoformat(),
@@ -57,7 +63,10 @@ class RealFixturesAPI:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    for match in data.get('matches', []):
+                    matches = data.get('matches', [])
+                    print(f"📊 Respuesta API: {len(matches)} partidos encontrados para {league_code}")
+                    
+                    for match in matches:
                         if match['status'] == 'SCHEDULED':
                             match_date = datetime.fromisoformat(match['utcDate'].replace('Z', '+00:00'))
                             fixtures.append({
@@ -69,16 +78,18 @@ class RealFixturesAPI:
                                 'Competition': match['competition']['name'],
                                 'Status': match['status']
                             })
-                    print(f"✅ Obtenidos {len(data.get('matches', []))} partidos reales para {league_code}")
+                    
+                    print(f"✅ Agregados {len([m for m in matches if m['status'] == 'SCHEDULED'])} partidos programados para {league_code}")
                 else:
-                    print(f"⚠️ Error API {league_code}: {response.status_code}")
+                    print(f"⚠️ Error API {league_code}: {response.status_code} - {response.text}")
                 
-                time.sleep(1)  # Respetar límite de rate
+                time.sleep(1)  # Respetar límite de rate (10 requests/min)
                 
             except Exception as e:
-                print(f"Error obteniendo partidos de {league_code}: {e}")
+                print(f"❌ Error obteniendo partidos de {league_code}: {e}")
                 continue
         
+        print(f"🎯 Total de partidos obtenidos de API: {len(fixtures)}")
         return fixtures
     
     def _get_free_api_matches(self, days_ahead):
