@@ -882,6 +882,44 @@ def sync():
             'timestamp': datetime.now().isoformat()
         })
 
+@app.route('/dashboard-simple')
+def dashboard_simple():
+    """Dashboard simplificado para diagnóstico"""
+    try:
+        print("🔍 Dashboard simplificado - obteniendo datos...")
+        
+        # Obtener datos dinámicos
+        fixtures = get_dynamic_fixtures()
+        print(f"📊 Partidos obtenidos: {len(fixtures)}")
+        
+        # Agrupar por liga
+        fixtures_by_league = {}
+        for fixture in fixtures:
+            league = fixture.get('League', 'Unknown')
+            if league not in fixtures_by_league:
+                fixtures_by_league[league] = []
+            fixtures_by_league[league].append(fixture)
+        
+        print(f"📊 Ligas: {list(fixtures_by_league.keys())}")
+        
+        # Estadísticas básicas
+        system_stats = {
+            'model_accuracy': f"{MODEL_ACCURACY:.1f}%",
+            'matches_analyzed': f"{TOTAL_MATCHES:,}",
+            'avg_confidence': f"{AVG_CONFIDENCE:.1f}%",
+            'last_update': datetime.now().strftime('%H:%M')
+        }
+        
+        return render_template('index.html', 
+                            fixtures_by_league=fixtures_by_league,
+                            system_stats=system_stats,
+                            total_fixtures=len(fixtures),
+                            con_reglas=True)
+        
+    except Exception as e:
+        print(f"❌ Error en dashboard simplificado: {e}")
+        return f"Error: {str(e)}", 500
+
 @app.route('/debug-dashboard')
 def debug_dashboard():
     """Diagnóstico específico del dashboard principal"""
