@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 from datetime import datetime
 import os
+import pytz
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'sistema_precision_maxima_2025')
@@ -9,6 +10,57 @@ app.secret_key = os.environ.get('SECRET_KEY', 'sistema_precision_maxima_2025')
 MODEL_ACCURACY = 75.2
 AVG_CONFIDENCE = 89.1
 TOTAL_MATCHES = 2079
+
+# Funciones auxiliares para templates
+def convert_to_colombia_time(date_str, time_str=None):
+    """Convierte fecha y hora a zona horaria de Colombia"""
+    try:
+        # Parsear fecha
+        if isinstance(date_str, str):
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        else:
+            date_obj = date_str
+        
+        # Parsear hora si existe
+        if time_str and time_str != 'nan':
+            time_obj = datetime.strptime(time_str, '%H:%M').time()
+            dt = datetime.combine(date_obj, time_obj)
+        else:
+            dt = datetime.combine(date_obj, datetime.min.time())
+        
+        # Convertir a zona horaria de Colombia
+        colombia_tz = pytz.timezone('America/Bogota')
+        dt_colombia = colombia_tz.localize(dt)
+        
+        # Formatear fecha y hora
+        col_date = dt_colombia.strftime('%d/%m/%Y')
+        col_time = dt_colombia.strftime('%H:%M')
+        
+        return col_date, col_time
+    except Exception as e:
+        # En caso de error, devolver valores por defecto
+        return date_str, "TBD"
+
+def get_team_logo(team_name):
+    """Obtiene la URL del logo del equipo"""
+    try:
+        # Mapeo básico de equipos a logos
+        logo_mapping = {
+            'Liverpool': 'https://logos-world.net/wp-content/uploads/2020/06/Liverpool-Logo.png',
+            'Manchester City': 'https://logos-world.net/wp-content/uploads/2020/06/Manchester-City-Logo.png',
+            'Barcelona': 'https://logos-world.net/wp-content/uploads/2020/06/Barcelona-Logo.png',
+            'Real Madrid': 'https://logos-world.net/wp-content/uploads/2020/06/Real-Madrid-Logo.png',
+            'Bayern Munich': 'https://logos-world.net/wp-content/uploads/2020/06/Bayern-Munich-Logo.png',
+            'Borussia Dortmund': 'https://logos-world.net/wp-content/uploads/2020/06/Borussia-Dortmund-Logo.png'
+        }
+        
+        return logo_mapping.get(team_name, None)
+    except Exception:
+        return None
+
+# Registrar funciones en el contexto de templates
+app.jinja_env.globals.update(convert_to_colombia_time=convert_to_colombia_time)
+app.jinja_env.globals.update(get_team_logo=get_team_logo)
 
 @app.route('/')
 def index():
