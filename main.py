@@ -776,6 +776,7 @@ def debug_api():
                     
                     # Parámetros para próximos partidos
                     today = datetime.now().date()
+                    from datetime import timedelta
                     params = {
                         'dateFrom': today.isoformat(),
                         'dateTo': (today + timedelta(days=7)).isoformat(),
