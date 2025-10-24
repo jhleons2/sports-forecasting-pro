@@ -12,3 +12,5 @@ PIP_REQUIREMENTS_FILE = "requirements-railway.txt"
 [env]
 PORT = 8080
 FLASK_ENV = "production"
+FLASK_DEBUG = "False"
+SECRET_KEY = "sistema_precision_maxima_2025"
