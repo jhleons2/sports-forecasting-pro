@@ -7,6 +7,11 @@ import sys
 # Agregar el directorio src al path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
+# Configurar API key manualmente si no está en variables de entorno
+if not os.environ.get('FOOTBALL_API_KEY'):
+    os.environ['FOOTBALL_API_KEY'] = '2b1693b0c9ba4a99bf8346cd0a9d27d0'
+    print("🔑 API Key configurada manualmente en main.py")
+
 # Importar la API de partidos reales y sistema de predicción
 try:
     from api.real_fixtures_api import RealFixturesAPI
@@ -556,82 +561,101 @@ def test():
         'api_status': 'OK' if real_api else 'Not Available'
     }, 200
 
-@app.route('/debug-premier')
-def debug_premier():
-    """Endpoint específico para debuggear Premier League"""
+@app.route('/debug-api-test')
+def debug_api_test():
+    """Endpoint para probar específicamente tu API key de Football-Data.org"""
     try:
         debug_info = {
             'timestamp': datetime.now().isoformat(),
+            'api_key_test': None,
             'premier_league_test': None,
-            'sportdb_verification': None,
-            'all_sources_test': None
+            'all_leagues_test': None,
+            'raw_response': None
         }
         
-        if real_api:
-            # Probar específicamente Premier League
-            try:
-                print("🔍 Debugging Premier League específicamente...")
+        # Test 1: Verificar API key
+        api_key = os.environ.get('FOOTBALL_API_KEY', '2b1693b0c9ba4a99bf8346cd0a9d27d0')
+        debug_info['api_key_test'] = {
+            'key_found': bool(api_key),
+            'key_length': len(api_key) if api_key else 0,
+            'key_preview': api_key[:8] + '...' if api_key else 'None'
+        }
+        
+        # Test 2: Probar Premier League específicamente
+        try:
+            headers = {
+                'X-Auth-Token': api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            # Probar Premier League (PL)
+            url = "https://api.football-data.org/v4/competitions/PL/matches"
+            today = datetime.now().date()
+            date_to = today + timedelta(days=7)
+            
+            params = {
+                'dateFrom': today.isoformat(),
+                'dateTo': date_to.isoformat(),
+                'status': 'SCHEDULED'
+            }
+            
+            print(f"🔍 Probando Premier League con tu API key...")
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            
+            debug_info['premier_league_test'] = {
+                'status_code': response.status_code,
+                'headers': dict(response.headers),
+                'url_tested': url,
+                'params': params
+            }
+            
+            if response.status_code == 200:
+                data = response.json()
+                matches = data.get('matches', [])
+                debug_info['premier_league_test']['success'] = True
+                debug_info['premier_league_test']['matches_count'] = len(matches)
+                debug_info['premier_league_test']['sample_matches'] = matches[:3] if matches else []
+                debug_info['raw_response'] = data
+            else:
+                debug_info['premier_league_test']['success'] = False
+                debug_info['premier_league_test']['error'] = response.text
                 
-                # Test 1: Verificar ID de Premier League
-                test_url = "https://www.thesportsdb.com/api/v1/json/123/lookupleague.php?id=4328"
-                response = requests.get(test_url, timeout=10)
+        except Exception as e:
+            debug_info['premier_league_test'] = {'error': str(e)}
+        
+        # Test 3: Probar todas las ligas disponibles
+        try:
+            competitions_url = "https://api.football-data.org/v4/competitions"
+            competitions_response = requests.get(competitions_url, headers=headers, timeout=10)
+            
+            if competitions_response.status_code == 200:
+                competitions_data = competitions_response.json()
+                competitions = competitions_data.get('competitions', [])
                 
-                if response.status_code == 200:
-                    data = response.json()
-                    league_info = data.get('leagues', [{}])[0]
-                    debug_info['sportdb_verification'] = {
-                        'id_4328_name': league_info.get('strLeague', 'Unknown'),
-                        'id_4328_country': league_info.get('strCountry', 'Unknown'),
-                        'id_4328_sport': league_info.get('strSport', 'Unknown')
-                    }
+                available_leagues = []
+                for comp in competitions:
+                    if comp.get('plan') == 'TIER_ONE':
+                        available_leagues.append({
+                            'id': comp['id'],
+                            'name': comp['name'],
+                            'code': comp.get('code', 'N/A'),
+                            'area': comp.get('area', {}).get('name', 'N/A')
+                        })
                 
-                # Test 2: Buscar Premier League real
-                all_leagues_url = "https://www.thesportsdb.com/api/v1/json/123/all_leagues.php"
-                leagues_response = requests.get(all_leagues_url, timeout=10)
+                debug_info['all_leagues_test'] = {
+                    'success': True,
+                    'total_competitions': len(competitions),
+                    'tier_one_leagues': available_leagues
+                }
+            else:
+                debug_info['all_leagues_test'] = {
+                    'success': False,
+                    'status_code': competitions_response.status_code,
+                    'error': competitions_response.text
+                }
                 
-                if leagues_response.status_code == 200:
-                    leagues_data = leagues_response.json()
-                    all_leagues = leagues_data.get('leagues', [])
-                    
-                    premier_leagues = []
-                    for league in all_leagues:
-                        league_name = league.get('strLeague', '')
-                        if 'Premier League' in league_name or 'EPL' in league_name:
-                            premier_leagues.append({
-                                'id': league.get('idLeague'),
-                                'name': league_name,
-                                'country': league.get('strCountry', ''),
-                                'sport': league.get('strSport', '')
-                            })
-                    
-                    debug_info['premier_league_test'] = {
-                        'found_premier_leagues': premier_leagues,
-                        'total_leagues_searched': len(all_leagues)
-                    }
-                
-                # Test 3: Probar obtener partidos con diferentes IDs
-                fixtures_test = {}
-                for league in premier_leagues[:3]:  # Probar los primeros 3
-                    try:
-                        league_id = league['id']
-                        url = f"https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id={league_id}"
-                        response = requests.get(url, timeout=10)
-                        
-                        if response.status_code == 200:
-                            data = response.json()
-                            events = data.get('events', [])
-                            fixtures_test[f"league_{league_id}"] = {
-                                'name': league['name'],
-                                'events_count': len(events),
-                                'sample_events': events[:3] if events else []
-                            }
-                    except Exception as e:
-                        fixtures_test[f"league_{league['id']}"] = {'error': str(e)}
-                
-                debug_info['all_sources_test'] = fixtures_test
-                
-            except Exception as e:
-                debug_info['error'] = str(e)
+        except Exception as e:
+            debug_info['all_leagues_test'] = {'error': str(e)}
         
         return jsonify(debug_info)
         
