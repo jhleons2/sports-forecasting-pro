@@ -77,7 +77,14 @@ class RealFixturesAPI:
                 sportdb_fixtures = self._get_sportdb_matches(days_ahead)
                 if len(sportdb_fixtures) > 0:
                     fixtures.extend(sportdb_fixtures)
-                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB")
+                    print(f"✅ Obtenidos {len(sportdb_fixtures)} partidos de The Sport DB (League)")
+                
+                # También intentar método diario para más cobertura
+                sportdb_daily_fixtures = self._get_sportdb_daily_matches(days_ahead)
+                if len(sportdb_daily_fixtures) > 0:
+                    fixtures.extend(sportdb_daily_fixtures)
+                    print(f"✅ Obtenidos {len(sportdb_daily_fixtures)} partidos de The Sport DB (Daily)")
+                    
             except Exception as e:
                 print(f"⚠️ Error con The Sport DB: {e}")
             
@@ -217,50 +224,70 @@ class RealFixturesAPI:
         return fixtures
     
     def _get_sportdb_matches(self, days_ahead):
-        """Obtener partidos de The Sport DB - COMPLETAMENTE GRATUITO"""
-        print("📡 Consultando The Sport DB (gratuito)...")
+        """Obtener partidos de The Sport DB - COMPLETAMENTE GRATUITO usando documentación oficial"""
+        print("📡 Consultando The Sport DB (gratuito) usando endpoints oficiales...")
         fixtures = []
         today = datetime.now().date()
         
-        # IDs de ligas en The Sport DB
+        # IDs de ligas principales según documentación oficial
         sportdb_leagues = {
             'E0': '4328',  # Premier League
-            'SP1': '4335', # La Liga
+            'SP1': '4335', # La Liga  
             'D1': '4331',  # Bundesliga
             'I1': '4332',  # Serie A
             'F1': '4334'   # Ligue 1
         }
         
+        # Usar el endpoint oficial para próximos partidos de liga
         for league_code, league_id in sportdb_leagues.items():
             try:
-                print(f"🔍 Obteniendo partidos de {league_code} desde The Sport DB...")
+                print(f"🔍 Obteniendo próximos partidos de {league_code} (ID: {league_id})...")
                 
-                url = f"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id={league_id}"
+                # Endpoint oficial: Schedule League Next
+                url = f"https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id={league_id}"
                 response = requests.get(url, timeout=10)
                 
                 if response.status_code == 200:
                     data = response.json()
                     events = data.get('events', [])
                     
-                    for event in events[:10]:  # Limitar a 10 partidos por liga
-                        event_date = datetime.strptime(event['dateEvent'], '%Y-%m-%d').date()
-                        
-                        # Solo partidos futuros dentro del rango
-                        if today <= event_date <= today + timedelta(days=days_ahead):
-                            fixtures.append({
-                                'HomeTeam': event['strHomeTeam'],
-                                'AwayTeam': event['strAwayTeam'],
-                                'Date': event['dateEvent'],
-                                'Time': event.get('strTime', '15:00'),
-                                'League': league_code,
-                                'Competition': event.get('strLeague', 'Unknown'),
-                                'Status': 'SCHEDULED',
-                                'Source': 'The Sport DB'
-                            })
+                    print(f"📊 Respuesta The Sport DB: {len(events)} eventos encontrados para {league_code}")
                     
-                    print(f"✅ Obtenidos {len([e for e in events[:10] if datetime.strptime(e['dateEvent'], '%Y-%m-%d').date() <= today + timedelta(days=days_ahead)])} partidos de {league_code}")
+                    for event in events:
+                        try:
+                            event_date = datetime.strptime(event['dateEvent'], '%Y-%m-%d').date()
+                            
+                            # Solo partidos futuros dentro del rango
+                            if today <= event_date <= today + timedelta(days=days_ahead):
+                                fixtures.append({
+                                    'HomeTeam': event['strHomeTeam'],
+                                    'AwayTeam': event['strAwayTeam'],
+                                    'Date': event['dateEvent'],
+                                    'Time': event.get('strTime', '15:00'),
+                                    'League': league_code,
+                                    'Competition': event.get('strLeague', 'Unknown'),
+                                    'Status': 'SCHEDULED',
+                                    'Source': 'The Sport DB (Official)',
+                                    'EventID': event.get('idEvent', ''),
+                                    'Venue': event.get('strVenue', ''),
+                                    'Country': event.get('strCountry', '')
+                                })
+                        except Exception as e:
+                            print(f"⚠️ Error procesando evento: {e}")
+                            continue
+                    
+                    valid_events = len([e for e in events if today <= datetime.strptime(e['dateEvent'], '%Y-%m-%d').date() <= today + timedelta(days=days_ahead)])
+                    print(f"✅ Agregados {valid_events} partidos válidos de {league_code}")
                 
-                time.sleep(1)  # Respetar límite de requests
+                elif response.status_code == 429:
+                    print(f"⚠️ Límite de requests alcanzado para {league_code}")
+                    time.sleep(5)
+                    continue
+                else:
+                    print(f"⚠️ Error API {league_code}: {response.status_code}")
+                
+                # Respetar límite de requests (30 por minuto para usuarios gratuitos)
+                time.sleep(2)
                 
             except Exception as e:
                 print(f"❌ Error obteniendo {league_code} de The Sport DB: {e}")
@@ -268,6 +295,88 @@ class RealFixturesAPI:
         
         print(f"📊 Total partidos de The Sport DB: {len(fixtures)}")
         return fixtures
+    
+    def _get_sportdb_daily_matches(self, days_ahead):
+        """Obtener partidos por día usando The Sport DB - Endpoint Schedule Day"""
+        print("📅 Consultando The Sport DB por días específicos...")
+        fixtures = []
+        today = datetime.now().date()
+        
+        # Obtener partidos para cada día en el rango
+        for day_offset in range(days_ahead + 1):
+            target_date = today + timedelta(days=day_offset)
+            date_str = target_date.strftime('%Y-%m-%d')
+            
+            try:
+                print(f"🔍 Obteniendo partidos para {date_str}...")
+                
+                # Endpoint oficial: Schedule Day
+                url = f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d={date_str}&s=Soccer"
+                response = requests.get(url, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    events = data.get('events', [])
+                    
+                    for event in events:
+                        try:
+                            # Mapear ligas según el nombre
+                            league_name = event.get('strLeague', '')
+                            league_code = self._map_league_name_to_code(league_name)
+                            
+                            if league_code:  # Solo incluir ligas que conocemos
+                                fixtures.append({
+                                    'HomeTeam': event['strHomeTeam'],
+                                    'AwayTeam': event['strAwayTeam'],
+                                    'Date': event['dateEvent'],
+                                    'Time': event.get('strTime', '15:00'),
+                                    'League': league_code,
+                                    'Competition': league_name,
+                                    'Status': 'SCHEDULED',
+                                    'Source': 'The Sport DB (Daily)',
+                                    'EventID': event.get('idEvent', ''),
+                                    'Venue': event.get('strVenue', ''),
+                                    'Country': event.get('strCountry', '')
+                                })
+                        except Exception as e:
+                            continue
+                    
+                    print(f"✅ Obtenidos {len(events)} eventos para {date_str}")
+                
+                elif response.status_code == 429:
+                    print(f"⚠️ Límite de requests alcanzado para {date_str}")
+                    time.sleep(5)
+                    continue
+                
+                # Respetar límite de requests
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"❌ Error obteniendo partidos para {date_str}: {e}")
+                continue
+        
+        print(f"📊 Total partidos diarios de The Sport DB: {len(fixtures)}")
+        return fixtures
+    
+    def _map_league_name_to_code(self, league_name):
+        """Mapear nombres de ligas a códigos estándar"""
+        league_mapping = {
+            'English Premier League': 'E0',
+            'Premier League': 'E0',
+            'La Liga': 'SP1',
+            'Primera Division': 'SP1',
+            'Bundesliga': 'D1',
+            'Serie A': 'I1',
+            'Ligue 1': 'F1',
+            'Champions League': 'CL',
+            'Europa League': 'EL'
+        }
+        
+        for key, code in league_mapping.items():
+            if key.lower() in league_name.lower():
+                return code
+        
+        return None
     
     def _get_footystats_matches(self, days_ahead):
         """Obtener partidos de FootyStats - GRATUITO CON LÍMITE"""
