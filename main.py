@@ -14,6 +14,7 @@ try:
     real_api = RealFixturesAPI()
     prediction_system = RealPredictionSystem()
     print("✅ API de partidos reales y sistema de predicción cargados correctamente")
+    print(f"🔑 API Key configurada: {real_api.api_key[:8]}...")
 except ImportError as e:
     print(f"⚠️ No se pudo cargar los sistemas reales: {e}")
     real_api = None
@@ -279,15 +280,36 @@ def analysis(league, match_index):
     except Exception as e:
         return f"Error: {str(e)}", 500
 
-@app.route('/sync')
-def sync_fixtures():
-    """Sincronizar partidos"""
+@app.route('/debug')
+def debug():
+    """Endpoint de diagnóstico para verificar el estado de la API"""
     try:
-        return jsonify({
-            'status': 'success',
-            'message': 'Partidos sincronizados correctamente',
-            'timestamp': datetime.now().isoformat()
-        })
+        debug_info = {
+            'api_available': real_api is not None,
+            'api_key': real_api.api_key[:8] + '...' if real_api else 'No disponible',
+            'environment_vars': {
+                'FOOTBALL_API_KEY': os.environ.get('FOOTBALL_API_KEY', 'No configurada')[:8] + '...' if os.environ.get('FOOTBALL_API_KEY') else 'No configurada'
+            },
+            'current_time': datetime.now().isoformat(),
+            'test_api_call': None
+        }
+        
+        # Probar una llamada a la API
+        if real_api:
+            try:
+                test_fixtures = real_api.get_upcoming_matches(days_ahead=1)
+                debug_info['test_api_call'] = {
+                    'success': True,
+                    'fixtures_count': len(test_fixtures),
+                    'sample_fixture': test_fixtures[0] if test_fixtures else None
+                }
+            except Exception as e:
+                debug_info['test_api_call'] = {
+                    'success': False,
+                    'error': str(e)
+                }
+        
+        return jsonify(debug_info)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -295,15 +317,21 @@ def get_upcoming_fixtures():
     """Obtener partidos próximos reales usando API dinámica - GARANTIZA DATOS REALES"""
     try:
         print("🔍 Iniciando obtención de partidos reales...")
+        print(f"🔑 API disponible: {real_api is not None}")
         
         # Intentar API real primero
         if real_api:
             print("📡 Usando API real de partidos...")
             fixtures = real_api.get_upcoming_matches(days_ahead=7)
-            print(f"✅ Obtenidos {len(fixtures)} partidos de API real")
+            print(f"📊 API retornó {len(fixtures)} partidos")
             
             if len(fixtures) > 0:
+                print("✅ Usando datos de API real")
                 return fixtures
+            else:
+                print("⚠️ API no retornó partidos, usando fallback")
+        else:
+            print("❌ API no disponible, usando fallback")
         
         # Si no hay datos de API, usar métodos alternativos
         print("🔄 Intentando métodos alternativos...")
