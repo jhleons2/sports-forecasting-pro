@@ -79,8 +79,8 @@ class SimpleAlertManager:
                 probs = predictions['probabilities']
                 
                 # Home Win
-                if probs.get('home_win', 0) > 0.6:  # Probabilidad alta de victoria local
-                    edge = probs['home_win'] - 0.5  # Edge sobre mercado equilibrado
+                if probs.get('home_win', 0) > 0.45:  # Probabilidad moderada-alta de victoria local
+                    edge = probs['home_win'] - 0.33  # Edge sobre mercado equilibrado (1/3)
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -98,8 +98,8 @@ class SimpleAlertManager:
                         alerts.append(alert)
                 
                 # Away Win
-                if probs.get('away_win', 0) > 0.6:  # Probabilidad alta de victoria visitante
-                    edge = probs['away_win'] - 0.5
+                if probs.get('away_win', 0) > 0.45:  # Probabilidad moderada-alta de victoria visitante
+                    edge = probs['away_win'] - 0.33
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -117,8 +117,8 @@ class SimpleAlertManager:
                         alerts.append(alert)
                 
                 # Draw
-                if probs.get('draw', 0) > 0.4:  # Probabilidad alta de empate
-                    edge = probs['draw'] - 0.3  # Empate menos común
+                if probs.get('draw', 0) > 0.25:  # Probabilidad moderada de empate
+                    edge = probs['draw'] - 0.25  # Empate menos común
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -139,8 +139,8 @@ class SimpleAlertManager:
             if 'over_under' in predictions:
                 ou = predictions['over_under']
                 
-                if ou.get('over_2_5', 0) > 0.7:  # Alta probabilidad Over 2.5
-                    edge = ou['over_2_5'] - 0.5
+                if ou.get('over_2_5', 0) > 0.55:  # Probabilidad moderada Over 2.5
+                    edge = ou['over_2_5'] - 0.45
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
