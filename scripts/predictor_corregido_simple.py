@@ -260,12 +260,20 @@ class PredictorCorregidoSimple:
             # Si la diferencia de ELO es pequeña, aumentar probabilidad de sorpresa
             elo_diff = current_elo_home - current_elo_away
             
-            if abs(elo_diff) < 100:  # Diferencia pequeña de ELO
-                # Aumentar empate y reducir favorito - FACTOR AUMENTADO
-                adjustment = 1 + (underdog_risk * 0.3)  # De 0.15 a 0.3
-                home_prob *= (1 - underdog_risk * 0.15)  # De 0.1 a 0.15
+            # AJUSTE MEJORADO PARA EMPATES
+            # Si la diferencia de ELO es MUY pequeña, aumentar significativamente el empate
+            if abs(elo_diff) < 50:  # Equipos muy similares
+                # Aumentar empate de forma más agresiva
+                draw_increase = 0.08  # Aumentar empate en 8%
+                draw_prob += draw_increase
+                home_prob *= 0.92  # Reducir local
+                away_prob *= 0.92  # Reducir visitante
+            elif abs(elo_diff) < 100:  # Diferencia pequeña de ELO
+                # Aumentar empate y reducir favorito
+                adjustment = 1 + (underdog_risk * 0.4)  # Aumentado de 0.3 a 0.4
+                home_prob *= (1 - underdog_risk * 0.2)  # Aumentado de 0.15 a 0.2
                 draw_prob *= adjustment
-                away_prob *= (1 + underdog_risk * 0.1)  # De 0.05 a 0.1
+                away_prob *= (1 + underdog_risk * 0.15)  # Aumentado de 0.1 a 0.15
             
             # Aplicar ajuste por eficiencia de xG
             xg_diff = xg_home - xg_away
