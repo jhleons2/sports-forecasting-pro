@@ -5,9 +5,10 @@ buildCommand = "pip install -r requirements-railway.txt"
 [deploy]
 startCommand = "python app_argon_con_reglas.py"
 healthcheckPath = "/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 600
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+watchPatterns = ["app_argon_con_reglas.py"]
 
 [env]
 PORT = 8080
@@ -16,3 +17,4 @@ FLASK_DEBUG = "False"
 SECRET_KEY = "sistema_precision_maxima_2025"
 FOOTBALL_API_KEY = "2b1693b0c9ba4a99bf8346cd0a9d27d0"
 PYTHONPATH = "/app"
+PYTHONUNBUFFERED = "1"

@@ -493,6 +493,26 @@ def api_generate_alerts():
         }), 500
 
 
+# Endpoint de healthcheck para Railway - DEBE ESTAR FUERA DEL if __name__
+@app.route('/health')
+def health_check():
+    """Health check endpoint para Railway"""
+    try:
+        status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'predictor_loaded': hasattr(predictor, 'model'),
+            'fixtures_loaded': len(upcoming_fixtures) > 0
+        }
+        return jsonify(status), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'starting',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 503
+
+
 if __name__ == '__main__':
     print("\n" + "=" * 70)
     print("DASHBOARD CON TUS 5 REGLAS - SPORTS FORECASTING PRO")
@@ -507,11 +527,6 @@ if __name__ == '__main__':
     print("Dashboard disponible en: http://localhost:5000")
     print("\nPresiona Ctrl+C para detener")
     print("=" * 70 + "\n")
-    
-    # Endpoint de healthcheck para Railway
-    @app.route('/health')
-    def health_check():
-        return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
     
     # Configuración para Railway
     import os
