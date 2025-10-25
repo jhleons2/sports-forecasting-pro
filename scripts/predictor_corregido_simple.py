@@ -249,43 +249,42 @@ class PredictorCorregidoSimple:
         
         # APLICAR MEJORAS DESDE src.features.mejoras_prediccion
         try:
-            # Usar las mejoras para ajustar probabilidades
-            original_probs = {'home': home_prob, 'draw': draw_prob, 'away': away_prob}
-            
             # Obtener pesos según calidad del rival
             pesos = self.mejoras.mejora_rivalidad.peso_reglas_segun_rival(
                 current_elo_home, current_elo_away
             )
             
-            # Ajustar probabilidades con eficiencia
-            adjusted_probs = self.mejoras.mejora_temporal.ajustar_probabilidades_tiempo_real(
-                match_minute=0,  # Antes del partido
-                home_goals=0,
-                away_goals=0,
-                original_probs=original_probs.copy()
-            )
+            # Aplicar ajuste por riesgo de sorpresa del equipo débil
+            underdog_risk = pesos.get('underdog_risk', 0.15)
+            
+            # Si la diferencia de ELO es pequeña, aumentar probabilidad de sorpresa
+            elo_diff = current_elo_home - current_elo_away
+            
+            if abs(elo_diff) < 100:  # Diferencia pequeña de ELO
+                # Aumentar empate y reducir favorito
+                home_prob *= (1 - underdog_risk * 0.1)
+                draw_prob *= (1 + underdog_risk * 0.15)
+                away_prob *= (1 + underdog_risk * 0.05)
             
             # Aplicar ajuste por eficiencia de xG
             xg_diff = xg_home - xg_away
-            elo_diff = (current_elo_home - current_elo_away) / 100.0
+            elo_xg_expected = elo_diff / 100.0
             
             # Si hay discrepancia entre xG y ELO, ajustar
-            if abs(xg_diff - elo_diff) > 0.3:
-                if xg_diff < elo_diff:
-                    # xG subestimado para local
-                    adjusted_probs['home'] *= 1.08
-                    adjusted_probs['away'] *= 0.92
+            if abs(xg_diff - elo_xg_expected) > 0.2:
+                if xg_diff < elo_xg_expected:
+                    # xG subestimado para local - ajustar hacia local
+                    home_prob *= 1.05
+                    away_prob *= 0.95
                 else:
-                    # xG sobreestimado para local
-                    adjusted_probs['home'] *= 0.92
-                    adjusted_probs['away'] *= 1.08
-            
-            home_prob = adjusted_probs['home']
-            draw_prob = adjusted_probs['draw']
-            away_prob = adjusted_probs['away']
+                    # xG sobreestimado para local - ajustar hacia visitante
+                    home_prob *= 0.95
+                    away_prob *= 1.05
             
             print(f"\n✅ Mejoras aplicadas:")
-            print(f"   Pesos según rival: {pesos.get('underdog_risk', 0.15):.2f}")
+            print(f"   Underdog risk: {underdog_risk:.3f}")
+            print(f"   xG diff: {xg_diff:.2f}, ELO expected: {elo_xg_expected:.2f}")
+            print(f"   Ajuste aplicado: home={home_prob:.3f}, draw={draw_prob:.3f}, away={away_prob:.3f}")
             
         except Exception as e:
             print(f"   ADVERTENCIA: No se pudieron aplicar mejoras: {e}")
