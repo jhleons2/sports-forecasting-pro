@@ -30,10 +30,22 @@ import yaml
 from collections import OrderedDict
 
 # NUEVO: Usar predictor CON REGLAS DINÁMICAS CORREGIDO
-from scripts.predictor_corregido_simple import PredictorCorregidoSimple
-from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
-from src.analysis.alerts import AlertManager
-from src.analysis.simple_alerts import SimpleAlertManager
+# Importaciones con rutas absolutas para Railway
+try:
+    from scripts.predictor_corregido_simple import PredictorCorregidoSimple
+    from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
+    from src.analysis.alerts import AlertManager
+    from src.analysis.simple_alerts import SimpleAlertManager
+except ImportError as e:
+    print(f"ERROR de importación: {e}")
+    print(f"PYTHONPATH actual: {os.environ.get('PYTHONPATH', 'No definido')}")
+    print(f"sys.path: {sys.path[:5]}")
+    # Intentar importación alternativa
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from scripts.predictor_corregido_simple import PredictorCorregidoSimple
+    from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
+    from src.analysis.alerts import AlertManager
+    from src.analysis.simple_alerts import SimpleAlertManager
 
 app = Flask(__name__)
 
@@ -144,22 +156,26 @@ print("MAPEO AUTOMATICO DE NOMBRES incluido")
 predictor = PredictorCorregidoSimple()  # Ya llama a load_and_train en __init__
 print("OK - Predictor CON REGLAS DINÁMICAS CORREGIDO listo")
 
-# Actualizar fixtures automáticamente
-print("\nActualizando fixtures desde las fuentes de datos...")
-try:
-    import subprocess
-    result = subprocess.run(
-        ["python", "scripts/get_upcoming_fixtures.py"],
-        capture_output=True,
-        text=True,
-        timeout=120  # 2 minutos timeout
-    )
-    if result.returncode == 0:
-        print("✓ Fixtures actualizados correctamente")
-    else:
-        print(f"⚠ ADVERTENCIA al actualizar fixtures: {result.stderr}")
-except Exception as e:
-    print(f"⚠ ADVERTENCIA: No se pudieron actualizar fixtures: {e}")
+# Actualizar fixtures automáticamente (solo en local, no en Railway)
+is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None or os.environ.get('PORT') is not None
+if not is_railway:
+    print("\nActualizando fixtures desde las fuentes de datos...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["python", "scripts/get_upcoming_fixtures.py"],
+            capture_output=True,
+            text=True,
+            timeout=120  # 2 minutos timeout
+        )
+        if result.returncode == 0:
+            print("✓ Fixtures actualizados correctamente")
+        else:
+            print(f"⚠ ADVERTENCIA al actualizar fixtures: {result.stderr}")
+    except Exception as e:
+        print(f"⚠ ADVERTENCIA: No se pudieron actualizar fixtures: {e}")
+else:
+    print("\n⚠ Modo Railway: Saltando actualización automática de fixtures")
 
 # Cargar fixtures próximos
 try:
