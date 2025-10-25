@@ -9,8 +9,17 @@ Abre en: http://localhost:5000
 """
 
 import sys
+import os
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
+
+# Configurar PYTHONPATH para Railway
+ROOT_DIR = Path(__file__).parent.absolute()
+sys.path.insert(0, str(ROOT_DIR))
+sys.path.insert(0, str(ROOT_DIR / "scripts"))
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
+# Configurar PYTHONPATH en entorno
+os.environ['PYTHONPATH'] = f"{ROOT_DIR}:{ROOT_DIR}/scripts:{ROOT_DIR}/src"
 
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
