@@ -159,7 +159,7 @@ class PredictorCorregidoSimple:
         probs_1x2 = {'home': pH, 'draw': pD, 'away': pA}
         
         # Ajustar con reglas
-        probs_ajustadas = self._ajustar_con_reglas(probs_1x2, reglas, home_goals, away_goals)
+        probs_ajustadas = self._ajustar_con_reglas(probs_1x2, reglas, home_goals, away_goals, elo_home, elo_away)
         
         print(f"\nProbabilidades 1X2:")
         print(f"   Local: {probs_ajustadas['home']*100:.1f}%")
@@ -201,7 +201,7 @@ class PredictorCorregidoSimple:
         mu = np.exp(p[2] - p[3]*elo_diff)
         return lam, mu
     
-    def _ajustar_con_reglas(self, probs_base: Dict, reglas: Dict, xg_home: float, xg_away: float) -> Dict:
+    def _ajustar_con_reglas(self, probs_base: Dict, reglas: Dict, xg_home: float, xg_away: float, elo_home: float = None, elo_away: float = None) -> Dict:
         """Ajustar probabilidades con reglas dinámicas + MEJORAS"""
         home_prob = probs_base['home']
         draw_prob = probs_base['draw']
@@ -243,9 +243,9 @@ class PredictorCorregidoSimple:
         # Aplicar ajuste temporal si hay datos de eficiencia
         original_probs = {'home': home_prob, 'draw': draw_prob, 'away': away_prob}
         
-        # Obtener ELO actual
-        current_elo_home = self._get_current_elo(reglas.get('home_team', ''))
-        current_elo_away = self._get_current_elo(reglas.get('away_team', ''))
+        # Obtener ELO actual - usar parámetros de la función
+        current_elo_home = elo_home if elo_home is not None else 1500.0
+        current_elo_away = elo_away if elo_away is not None else 1500.0
         
         # APLICAR MEJORAS DESDE src.features.mejoras_prediccion
         try:
