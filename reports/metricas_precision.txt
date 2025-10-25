@@ -1,16 +1,17 @@
 REPORTE DE PRECISIÓN DEL MODELO
 ======================================================================
 
-Total partidos analizados: 20
-Hit-rate: 50.00%
-Aciertos: 10
-Errores: 10
+Total partidos analizados: 2079
+Hit-rate: 56.33%
+Aciertos: 1171
+Errores: 908
 
 Distribución de predicciones:
-  H: 11
-  A: 9
+  H: 1145
+  A: 930
+  D: 4
 
 Distribución de realidad:
-  H: 8
-  D: 8
-  A: 4
+  H: 888
+  A: 674
+  D: 517

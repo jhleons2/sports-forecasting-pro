@@ -260,12 +260,11 @@ def main():
     # 4. Comparar predicciones con realidad
     print("\n3. Comparando predicciones con realidad...")
     
-    # Limitar a solo los últimos 20 partidos para prueba rápida
-    df_test = df_historico.tail(20)
-    print(f"   Usando {len(df_test)} partidos para prueba")
+    # Usar TODOS los partidos para análisis completo
+    print(f"   Usando {len(df_historico)} partidos para análisis completo")
     
     df_resultados = comparar_prediccion_realidad(
-        df_test,
+        df_historico,
         predictor
     )
     

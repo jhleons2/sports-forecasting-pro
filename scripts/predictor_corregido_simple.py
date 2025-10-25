@@ -25,6 +25,7 @@ from src.models.poisson_dc import DixonColes
 from src.features.reglas_dinamicas import calcular_reglas_dinamicas
 from src.features.ratings import add_elo
 from src.features.mejoras_prediccion import AplicarMejorasCompletas
+from src.features.eficiencia_conversion import analizador_eficiencia
 
 PROC = Path("data/processed")
 
@@ -145,6 +146,26 @@ class PredictorCorregidoSimple:
         lam, mu = self._intensity(row)
         home_goals = lam
         away_goals = mu
+        
+        # NUEVA MEJORA: Ajustar xG según eficiencia histórica
+        try:
+            eficiencia_home = analizador_eficiencia.calcular_eficiencia_equipo(
+                self.df_historico, home_mapeado, ventana_partidos=10
+            )
+            eficiencia_away = analizador_eficiencia.calcular_eficiencia_equipo(
+                self.df_historico, away_mapeado, ventana_partidos=10
+            )
+            
+            # Aplicar ajuste de eficiencia
+            home_goals, away_goals = analizador_eficiencia.aplicar_ajuste_eficiencia(
+                home_goals, away_goals, eficiencia_home, eficiencia_away
+            )
+            
+            print(f"\n[Ajuste de eficiencia aplicado]")
+            print(f"   Home: ratio={eficiencia_home.get('ratio_eficiencia', 1.0):.2f}")
+            print(f"   Away: ratio={eficiencia_away.get('ratio_eficiencia', 1.0):.2f}")
+        except Exception as e:
+            print(f"   ADVERTENCIA: Error aplicando ajuste de eficiencia: {e}")
         
         print(f"\nxG predichos:")
         print(f"   {equipo_home}: {home_goals:.2f}")
