@@ -3,9 +3,11 @@ builder = "NIXPACKS"
 buildCommand = "pip install -r requirements-railway.txt"
 
 [deploy]
-startCommand = "python main.py"
+startCommand = "python app_argon_con_reglas.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
 
 [env]
 PORT = 8080
@@ -13,3 +15,4 @@ FLASK_ENV = "production"
 FLASK_DEBUG = "False"
 SECRET_KEY = "sistema_precision_maxima_2025"
 FOOTBALL_API_KEY = "2b1693b0c9ba4a99bf8346cd0a9d27d0"
+PYTHONPATH = "/app"
