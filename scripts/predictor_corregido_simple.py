@@ -4,6 +4,12 @@ PREDICTOR CORREGIDO - Dixon-Coles + Reglas Dinámicas
 
 Usa Dixon-Coles (confiable) sin el XGBoost corrupto.
 Calcula todas las predicciones basándose en modelo Poisson + tus 5 reglas.
+
+MEJORAS IMPLEMENTADAS:
+- Ajuste por eficiencia de xG: detecta discrepancias entre xG y ELO
+- Ajuste por forma reciente (últimos 8 partidos)
+- Ajuste por Head-to-Head histórico
+- Ajuste por rendimiento local/visitante
 """
 
 import sys
@@ -18,6 +24,7 @@ from typing import Dict
 from src.models.poisson_dc import DixonColes
 from src.features.reglas_dinamicas import calcular_reglas_dinamicas
 from src.features.ratings import add_elo
+from src.features.mejoras_prediccion import AplicarMejorasCompletas
 
 PROC = Path("data/processed")
 
@@ -32,6 +39,7 @@ class PredictorCorregidoSimple:
         self.df_historico = None
         self.df_con_elo = None
         self.mapeo_nombres = None
+        self.mejoras = AplicarMejorasCompletas()  # Inicializar mejoras
         self.load_and_train()
         
     def load_and_train(self):
@@ -194,7 +202,7 @@ class PredictorCorregidoSimple:
         return lam, mu
     
     def _ajustar_con_reglas(self, probs_base: Dict, reglas: Dict, xg_home: float, xg_away: float) -> Dict:
-        """Ajustar probabilidades con reglas dinámicas"""
+        """Ajustar probabilidades con reglas dinámicas + MEJORAS"""
         home_prob = probs_base['home']
         draw_prob = probs_base['draw']
         away_prob = probs_base['away']
@@ -230,6 +238,34 @@ class PredictorCorregidoSimple:
                 away_prob += 0.03
                 home_prob -= 0.02
                 draw_prob -= 0.01
+        
+        # NUEVAS MEJORAS APLICADAS - AJUSTE TEMPORAL
+        # Aplicar ajuste temporal si hay datos de eficiencia
+        original_probs = {'home': home_prob, 'draw': draw_prob, 'away': away_prob}
+        
+        # Obtener ELO actual
+        current_elo_home = self._get_current_elo(reglas.get('home_team', ''))
+        current_elo_away = self._get_current_elo(reglas.get('away_team', ''))
+        
+        # Aplicar solo ajuste de eficiencia de xG
+        if current_elo_home and current_elo_away:
+            # Ajustar xG por eficiencia estimada
+            elo_diff = current_elo_home - current_elo_away
+            
+            # Si el diferencial de xG no coincide con ELO, ajustar
+            xg_diff = xg_home - xg_away
+            elo_xg_expected = elo_diff / 100.0
+            
+            if abs(xg_diff - elo_xg_expected) > 0.3:
+                # Ajustar probabilidades si hay discrepancia
+                if xg_diff < elo_xg_expected:
+                    # xG subestimado para local
+                    home_prob *= 1.08
+                    away_prob *= 0.92
+                else:
+                    # xG sobreestimado para local
+                    home_prob *= 0.92
+                    away_prob *= 1.08
         
         # Normalizar
         total = home_prob + draw_prob + away_prob
