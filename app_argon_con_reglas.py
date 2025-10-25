@@ -179,12 +179,23 @@ def index():
     """Página principal con lista de próximos partidos."""
     global upcoming_fixtures
     
+    # Orden fijo de ligas: Premier League primero
+    league_order = ['E0', 'SP1', 'D1', 'I1', 'F1', 'SC0', 'N1', 'B1', 'P1', 'T1']
+    
     fixtures_by_league = {}
     
     if len(upcoming_fixtures) > 0:
+        # Primero agregar ligas en el orden deseado
+        for league in league_order:
+            if league in upcoming_fixtures['League'].values:
+                league_fixtures = upcoming_fixtures[upcoming_fixtures['League'] == league].head(15)
+                fixtures_by_league[league] = league_fixtures.to_dict('records')
+        
+        # Luego agregar cualquier liga que no esté en el orden
         for league in upcoming_fixtures['League'].unique():
-            league_fixtures = upcoming_fixtures[upcoming_fixtures['League'] == league].head(15)
-            fixtures_by_league[league] = league_fixtures.to_dict('records')
+            if league not in fixtures_by_league:
+                league_fixtures = upcoming_fixtures[upcoming_fixtures['League'] == league].head(15)
+                fixtures_by_league[league] = league_fixtures.to_dict('records')
     
     # Estadísticas del sistema más útiles
     system_stats = {}
