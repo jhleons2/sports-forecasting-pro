@@ -311,7 +311,7 @@ class PredictorCorregidoSimple:
                     home_prob *= 0.95
                     away_prob *= 1.05
             
-            print(f"\n✅ Mejoras aplicadas:")
+            print(f"\nMejoras aplicadas:")
             print(f"   Underdog risk: {underdog_risk:.3f}")
             print(f"   xG diff: {xg_diff:.2f}, ELO expected: {elo_xg_expected:.2f}")
             print(f"   Ajuste aplicado: home={home_prob:.3f}, draw={draw_prob:.3f}, away={away_prob:.3f}")
