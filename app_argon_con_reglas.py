@@ -27,6 +27,7 @@ import numpy as np
 from datetime import datetime, timezone, timedelta
 import pytz
 import yaml
+from collections import OrderedDict
 
 # NUEVO: Usar predictor CON REGLAS DINÁMICAS CORREGIDO
 from scripts.predictor_corregido_simple import PredictorCorregidoSimple
@@ -182,7 +183,7 @@ def index():
     # Orden fijo de ligas: Premier League primero
     league_order = ['E0', 'SP1', 'D1', 'I1', 'F1', 'SC0', 'N1', 'B1', 'P1', 'T1']
     
-    fixtures_by_league = {}
+    fixtures_by_league = OrderedDict()
     
     if len(upcoming_fixtures) > 0:
         # Primero agregar ligas en el orden deseado
