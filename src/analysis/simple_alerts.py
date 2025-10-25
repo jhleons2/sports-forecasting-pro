@@ -38,7 +38,7 @@ class SimpleAlertManager:
             'CRITICAL': 0.15,    # Probabilidad > 15% por encima de mercado
             'HIGH': 0.10,        # Probabilidad > 10% por encima de mercado
             'MEDIUM': 0.05,      # Probabilidad > 5% por encima de mercado
-            'LOW': 0.02          # Probabilidad > 2% por encima de mercado
+            'LOW': 0.001         # Probabilidad > 0.1% por encima de mercado (MUY BAJO)
         }
         
         # Tiempo de expiración
@@ -74,13 +74,30 @@ class SimpleAlertManager:
             
             match_id = f"{partido_data['HomeTeam']}_vs_{partido_data['AwayTeam']}_{partido_data.get('Date', '')}"
             
-            # Analizar mercado 1X2
+            # Normalizar formato de probabilidades
             if 'probabilities' in predictions:
                 probs = predictions['probabilities']
+            elif 'home_prob' in predictions and 'away_prob' in predictions:
+                # Convertir formato alternativo
+                probs = {
+                    'home_win': predictions.get('home_prob', 0),
+                    'away_win': predictions.get('away_prob', 0),
+                    'draw': predictions.get('draw_prob', 0)
+                }
+            else:
+                # Usar datos directamente si son números
+                probs = {
+                    'home_win': predictions.get('home_prob', predictions.get('home_win', 0)),
+                    'away_win': predictions.get('away_prob', predictions.get('away_win', 0)),
+                    'draw': predictions.get('draw_prob', predictions.get('draw', 0))
+                }
+            
+            # Analizar mercado 1X2
+            if probs and any(v > 0 for v in probs.values()):
                 
                 # Home Win
-                if probs.get('home_win', 0) > 0.45:  # Probabilidad moderada-alta de victoria local
-                    edge = probs['home_win'] - 0.33  # Edge sobre mercado equilibrado (1/3)
+                if probs.get('home_win', 0) > 0.35:  # Probabilidad moderada de victoria local
+                    edge = max(0, probs['home_win'] - 0.33)  # Edge sobre mercado equilibrado (1/3), nunca negativo
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -98,8 +115,8 @@ class SimpleAlertManager:
                         alerts.append(alert)
                 
                 # Away Win
-                if probs.get('away_win', 0) > 0.45:  # Probabilidad moderada-alta de victoria visitante
-                    edge = probs['away_win'] - 0.33
+                if probs.get('away_win', 0) > 0.35:  # Probabilidad moderada de victoria visitante
+                    edge = max(0, probs['away_win'] - 0.33)
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -117,8 +134,8 @@ class SimpleAlertManager:
                         alerts.append(alert)
                 
                 # Draw
-                if probs.get('draw', 0) > 0.25:  # Probabilidad moderada de empate
-                    edge = probs['draw'] - 0.25  # Empate menos común
+                if probs.get('draw', 0) > 0.20:  # Probabilidad moderada de empate
+                    edge = max(0, probs['draw'] - 0.25)  # Empate menos común
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
@@ -139,8 +156,8 @@ class SimpleAlertManager:
             if 'over_under' in predictions:
                 ou = predictions['over_under']
                 
-                if ou.get('over_2_5', 0) > 0.55:  # Probabilidad moderada Over 2.5
-                    edge = ou['over_2_5'] - 0.45
+                if ou.get('over_2_5', 0) > 0.50:  # Probabilidad moderada Over 2.5
+                    edge = max(0, ou['over_2_5'] - 0.45)
                     if edge >= self.alert_thresholds['LOW']:
                         urgency = self._determine_urgency(edge)
                         alert = SimpleAlert(
