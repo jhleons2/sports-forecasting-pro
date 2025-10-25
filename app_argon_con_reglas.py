@@ -143,10 +143,32 @@ print("MAPEO AUTOMATICO DE NOMBRES incluido")
 predictor = PredictorCorregidoSimple()  # Ya llama a load_and_train en __init__
 print("OK - Predictor CON REGLAS DINÁMICAS CORREGIDO listo")
 
+# Actualizar fixtures automáticamente
+print("\nActualizando fixtures desde las fuentes de datos...")
+try:
+    import subprocess
+    result = subprocess.run(
+        ["python", "scripts/get_upcoming_fixtures.py"],
+        capture_output=True,
+        text=True,
+        timeout=120  # 2 minutos timeout
+    )
+    if result.returncode == 0:
+        print("✓ Fixtures actualizados correctamente")
+    else:
+        print(f"⚠ ADVERTENCIA al actualizar fixtures: {result.stderr}")
+except Exception as e:
+    print(f"⚠ ADVERTENCIA: No se pudieron actualizar fixtures: {e}")
+
 # Cargar fixtures próximos
 try:
     upcoming_fixtures = pd.read_parquet(PROC / "upcoming_fixtures.parquet")
     print(f"OK - {len(upcoming_fixtures)} fixtures cargados")
+    
+    # Mostrar ligas disponibles
+    if 'League' in upcoming_fixtures.columns:
+        ligas = upcoming_fixtures['League'].unique()
+        print(f"✓ Ligas disponibles: {', '.join(sorted(ligas))}")
 except:
     print("ADVERTENCIA: No se encontraron fixtures")
     upcoming_fixtures = pd.DataFrame()
