@@ -36,6 +36,14 @@
     background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(23, 162, 184, 0.1));
 }
 
+.alert-section {
+    transition: all 0.3s ease;
+}
+
+.alert-section.hidden {
+    display: none !important;
+}
+
 .urgency-badge {
     font-size: 0.8rem;
     font-weight: bold;
@@ -158,6 +166,28 @@
         </div>
     </div>
 
+    <!-- Filtro de Confianza -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filtro de Confianza
+                    </h5>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="confidenceFilter" id="filterAll" value="all" checked>
+                        <label class="form-check-label" for="filterAll">Todas las Alertas</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="confidenceFilter" id="filterHigh" value="high">
+                        <label class="form-check-label" for="filterHigh">Alta Confianza (Críticas + Altas)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Resumen de Alertas -->
     {% if summary.total_alerts > 0 %}
     <div class="row mb-4">
@@ -199,7 +229,7 @@
     
     <!-- Alertas Críticas -->
     {% if alerts_by_urgency.CRITICAL|length > 0 %}
-    <div class="row mb-4">
+    <div class="row mb-4 alert-section" data-urgency="CRITICAL">
         <div class="col-12">
             <h3 class="text-danger mb-3">
                 <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -238,7 +268,7 @@
 
     <!-- Alertas Altas -->
     {% if alerts_by_urgency.HIGH|length > 0 %}
-    <div class="row mb-4">
+    <div class="row mb-4 alert-section" data-urgency="HIGH">
         <div class="col-12">
             <h3 class="text-warning mb-3">
                 <i class="fas fa-arrow-up mr-2"></i>
@@ -277,7 +307,7 @@
 
     <!-- Alertas Medias -->
     {% if alerts_by_urgency.MEDIUM|length > 0 %}
-    <div class="row mb-4">
+    <div class="row mb-4 alert-section" data-urgency="MEDIUM">
         <div class="col-12">
             <h3 class="text-info mb-3">
                 <i class="fas fa-minus mr-2"></i>
@@ -316,7 +346,7 @@
 
     <!-- Alertas Bajas -->
     {% if alerts_by_urgency.LOW|length > 0 %}
-    <div class="row mb-4">
+    <div class="row mb-4 alert-section" data-urgency="LOW">
         <div class="col-12">
             <h3 class="text-success mb-3">
                 <i class="fas fa-arrow-down mr-2"></i>
@@ -497,6 +527,28 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
         }, index * 100);
+    });
+
+    // Filtro de confianza
+    const filterRadios = document.querySelectorAll('input[name="confidenceFilter"]');
+    filterRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const filterValue = this.value;
+            const sections = document.querySelectorAll('.alert-section');
+            
+            sections.forEach(section => {
+                if (filterValue === 'all') {
+                    section.classList.remove('hidden');
+                } else if (filterValue === 'high') {
+                    const urgency = section.getAttribute('data-urgency');
+                    if (urgency === 'CRITICAL' || urgency === 'HIGH') {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                }
+            });
+        });
     });
 });
 </script>
