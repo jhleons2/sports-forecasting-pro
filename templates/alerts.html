@@ -515,59 +515,76 @@ setInterval(() => {
 }, 300000); // 5 minutos
 {% endif %}
 
-// Animaciones al cargar - envolver en try-catch para evitar conflictos
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        const cards = document.querySelectorAll('.alert-card');
-        cards.forEach((card, index) => {
-            if (card) {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    if (card) {
-                        card.style.transition = 'all 0.5s ease';
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }
-                }, index * 100);
-            }
-        });
-    } catch (e) {
-        console.log('Animaciones de tarjetas omitidas:', e);
+// Inicializar alertas - en scope aislado para evitar conflictos
+(function initAlertsPage() {
+    // Esperar a que DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAlertsPage);
+        return;
     }
+    
+    // Animaciones de tarjetas
+    (function initCardAnimations() {
+        try {
+            const cards = document.querySelectorAll('.alert-card');
+            if (cards && cards.length > 0) {
+                cards.forEach((card, index) => {
+                    if (card && card.parentElement) {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        
+                        setTimeout(() => {
+                            if (card && card.parentElement) {
+                                card.style.transition = 'all 0.5s ease';
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }
+                        }, index * 100);
+                    }
+                });
+            }
+        } catch (e) {
+            // Silenciar error
+        }
+    })();
 
     // Filtro de confianza
-    try {
-        const filterRadios = document.querySelectorAll('input[name="confidenceFilter"]');
-        if (filterRadios && filterRadios.length > 0) {
-            filterRadios.forEach(radio => {
-                if (radio) {
-                    radio.addEventListener('change', function() {
-                        const filterValue = this.value;
-                        const sections = document.querySelectorAll('.alert-section');
-                        
-                        sections.forEach(section => {
-                            if (section) {
-                                if (filterValue === 'all') {
-                                    section.classList.remove('hidden');
-                                } else if (filterValue === 'high') {
-                                    const urgency = section.getAttribute('data-urgency');
-                                    if (urgency === 'CRITICAL' || urgency === 'HIGH') {
-                                        section.classList.remove('hidden');
-                                    } else {
-                                        section.classList.add('hidden');
+    (function initFilter() {
+        try {
+            const filterRadios = document.querySelectorAll('input[name="confidenceFilter"]');
+            if (filterRadios && filterRadios.length > 0) {
+                filterRadios.forEach(radio => {
+                    if (radio && radio.parentElement) {
+                        radio.addEventListener('change', function() {
+                            try {
+                                const filterValue = this.value;
+                                const sections = document.querySelectorAll('.alert-section');
+                                
+                                sections.forEach(section => {
+                                    if (section && section.parentElement) {
+                                        if (filterValue === 'all') {
+                                            section.classList.remove('hidden');
+                                        } else if (filterValue === 'high') {
+                                            const urgency = section.getAttribute('data-urgency');
+                                            if (urgency === 'CRITICAL' || urgency === 'HIGH') {
+                                                section.classList.remove('hidden');
+                                            } else {
+                                                section.classList.add('hidden');
+                                            }
+                                        }
                                     }
-                                }
+                                });
+                            } catch (e) {
+                                // Silenciar error
                             }
                         });
-                    });
-                }
-            });
+                    }
+                });
+            }
+        } catch (e) {
+            // Silenciar error
         }
-    } catch (e) {
-        console.log('Filtro de confianza omitido:', e);
-    }
-});
+    })();
+})();
 </script>
 {% endblock %}
