@@ -247,25 +247,51 @@ class PredictorCorregidoSimple:
         current_elo_home = self._get_current_elo(reglas.get('home_team', ''))
         current_elo_away = self._get_current_elo(reglas.get('away_team', ''))
         
-        # Aplicar solo ajuste de eficiencia de xG
-        if current_elo_home and current_elo_away:
-            # Ajustar xG por eficiencia estimada
-            elo_diff = current_elo_home - current_elo_away
+        # APLICAR MEJORAS DESDE src.features.mejoras_prediccion
+        try:
+            # Usar las mejoras para ajustar probabilidades
+            original_probs = {'home': home_prob, 'draw': draw_prob, 'away': away_prob}
             
-            # Si el diferencial de xG no coincide con ELO, ajustar
+            # Obtener pesos según calidad del rival
+            pesos = self.mejoras.mejora_rivalidad.peso_reglas_segun_rival(
+                current_elo_home, current_elo_away
+            )
+            
+            # Ajustar probabilidades con eficiencia
+            adjusted_probs = self.mejoras.mejora_temporal.ajustar_probabilidades_tiempo_real(
+                match_minute=0,  # Antes del partido
+                home_goals=0,
+                away_goals=0,
+                original_probs=original_probs.copy()
+            )
+            
+            # Aplicar ajuste por eficiencia de xG
             xg_diff = xg_home - xg_away
-            elo_xg_expected = elo_diff / 100.0
+            elo_diff = (current_elo_home - current_elo_away) / 100.0
             
-            if abs(xg_diff - elo_xg_expected) > 0.3:
-                # Ajustar probabilidades si hay discrepancia
-                if xg_diff < elo_xg_expected:
+            # Si hay discrepancia entre xG y ELO, ajustar
+            if abs(xg_diff - elo_diff) > 0.3:
+                if xg_diff < elo_diff:
                     # xG subestimado para local
-                    home_prob *= 1.08
-                    away_prob *= 0.92
+                    adjusted_probs['home'] *= 1.08
+                    adjusted_probs['away'] *= 0.92
                 else:
                     # xG sobreestimado para local
-                    home_prob *= 0.92
-                    away_prob *= 1.08
+                    adjusted_probs['home'] *= 0.92
+                    adjusted_probs['away'] *= 1.08
+            
+            home_prob = adjusted_probs['home']
+            draw_prob = adjusted_probs['draw']
+            away_prob = adjusted_probs['away']
+            
+            print(f"\n✅ Mejoras aplicadas:")
+            print(f"   Pesos según rival: {pesos.get('underdog_risk', 0.15):.2f}")
+            
+        except Exception as e:
+            print(f"   ADVERTENCIA: No se pudieron aplicar mejoras: {e}")
+            import traceback
+            traceback.print_exc()
+            # Continuar con probabilidades actuales
         
         # Normalizar
         total = home_prob + draw_prob + away_prob
