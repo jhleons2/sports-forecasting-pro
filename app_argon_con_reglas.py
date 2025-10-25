@@ -475,7 +475,7 @@ def api_generate_alerts():
             alert_manager.save_alerts(alerts)
         
         return jsonify({
-            'success': True,
+            'status': 'success',
             'alerts_generated': len(alerts),
             'matches_processed': len(matches_with_analysis),
             'message': f'Se generaron {len(alerts)} alertas de valor'
@@ -487,9 +487,9 @@ def api_generate_alerts():
         print(f"ERROR generando alertas: {e}")
         print(error_trace)
         return jsonify({
-            'success': False,
+            'status': 'error',
             'error': str(e),
-            'message': 'Error generando alertas'
+            'message': f'Error generando alertas: {str(e)}'
         }), 500
 
 
