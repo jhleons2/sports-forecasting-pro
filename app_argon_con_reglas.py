@@ -146,6 +146,25 @@ app.config['SECRET_KEY'] = 'sports-forecasting-pro-2025-con-reglas'
 PROC = Path("data/processed")
 REPORTS = Path("reports")
 
+# Endpoint de healthcheck para Railway - ANTES de cargar el predictor
+@app.route('/health')
+def health_check():
+    """Health check endpoint para Railway"""
+    try:
+        status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'predictor_loaded': 'predictor' in globals() and hasattr(predictor, 'model'),
+            'fixtures_loaded': 'upcoming_fixtures' in globals() and len(upcoming_fixtures) > 0
+        }
+        return jsonify(status), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'starting',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 503
+
 # NUEVO: Cargar predictor CON REGLAS DINÁMICAS
 print("\n" + "=" * 70)
 print("  DASHBOARD CON TUS 5 REGLAS DINÁMICAS - Inicializando")
@@ -153,8 +172,14 @@ print("=" * 70)
 print("\nCargando predictor CON REGLAS DINÁMICAS CORREGIDO...")
 print("Las reglas se calcularan DESDE HOY para cada prediccion")
 print("MAPEO AUTOMATICO DE NOMBRES incluido")
-predictor = PredictorCorregidoSimple()  # Ya llama a load_and_train en __init__
-print("OK - Predictor CON REGLAS DINÁMICAS CORREGIDO listo")
+try:
+    predictor = PredictorCorregidoSimple()  # Ya llama a load_and_train en __init__
+    print("OK - Predictor CON REGLAS DINÁMICAS CORREGIDO listo")
+except Exception as e:
+    print(f"ERROR cargando predictor: {e}")
+    import traceback
+    traceback.print_exc()
+    raise
 
 # Actualizar fixtures automáticamente (solo en local, no en Railway)
 is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None or os.environ.get('PORT') is not None
@@ -541,26 +566,6 @@ def api_generate_alerts():
             'error': str(e),
             'message': f'Error generando alertas: {str(e)}'
         }), 500
-
-
-# Endpoint de healthcheck para Railway - DEBE ESTAR FUERA DEL if __name__
-@app.route('/health')
-def health_check():
-    """Health check endpoint para Railway"""
-    try:
-        status = {
-            'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
-            'predictor_loaded': hasattr(predictor, 'model'),
-            'fixtures_loaded': len(upcoming_fixtures) > 0
-        }
-        return jsonify(status), 200
-    except Exception as e:
-        return jsonify({
-            'status': 'starting',
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }), 503
 
 
 if __name__ == '__main__':
