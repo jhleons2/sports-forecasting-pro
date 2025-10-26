@@ -40,12 +40,9 @@ except ImportError as e:
     print(f"ERROR de importación: {e}")
     print(f"PYTHONPATH actual: {os.environ.get('PYTHONPATH', 'No definido')}")
     print(f"sys.path: {sys.path[:5]}")
-    # Intentar importación alternativa
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from scripts.predictor_corregido_simple import PredictorCorregidoSimple
-    from src.features.reglas_dinamicas import calcular_reglas_dinamicas, formato_reglas_texto
-    from src.analysis.alerts import AlertManager
-    from src.analysis.simple_alerts import SimpleAlertManager
+    print(f"ROOT_DIR: {ROOT_DIR}")
+    # Si falla, el error se propagará para que Railway muestre los logs completos
+    raise
 
 app = Flask(__name__)
 
