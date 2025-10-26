@@ -14,14 +14,15 @@ from pathlib import Path
 
 # Configurar PYTHONPATH para Railway
 ROOT_DIR = Path(__file__).parent.absolute()
+ROOT_DIR_STR = str(ROOT_DIR)  # Convertir a string para Railway
 print(f"[DEBUG] ROOT_DIR: {ROOT_DIR}")
 print(f"[DEBUG] __file__: {__file__}")
-sys.path.insert(0, str(ROOT_DIR))
-sys.path.insert(0, str(ROOT_DIR / "scripts"))
-sys.path.insert(0, str(ROOT_DIR / "src"))
+sys.path.insert(0, ROOT_DIR_STR)
+sys.path.insert(0, os.path.join(ROOT_DIR_STR, "scripts"))
+sys.path.insert(0, os.path.join(ROOT_DIR_STR, "src"))
 
 # Configurar PYTHONPATH en entorno
-os.environ['PYTHONPATH'] = f"{ROOT_DIR}:{ROOT_DIR}/scripts:{ROOT_DIR}/src"
+os.environ['PYTHONPATH'] = f"{ROOT_DIR_STR}:{os.path.join(ROOT_DIR_STR, 'scripts')}:{os.path.join(ROOT_DIR_STR, 'src')}"
 print(f"[DEBUG] PYTHONPATH: {os.environ['PYTHONPATH']}")
 print(f"[DEBUG] sys.path: {sys.path[:5]}")
 
