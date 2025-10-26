@@ -35,14 +35,23 @@ class MapeadorDinamicoNombres:
             df_fixtures = pd.read_parquet('data/processed/upcoming_fixtures.parquet')
             self.nombres_fixtures = set(df_fixtures['HomeTeam'].unique()) | set(df_fixtures['AwayTeam'].unique())
             
+            # MAPEOS MANUALES EXPLÍCITOS (prioridad sobre algoritmo)
+            self.mapeos_manuales = {
+                'Arsenal FC': 'Arsenal',
+                'Paris SG': 'Paris SG',  # Mantener separado
+                'Paris FC': 'Paris FC'   # Mantener separado
+            }
+            
             print(f"OK Mapeador dinámico cargado:")
             print(f"   - {len(self.nombres_historicos)} equipos históricos")
             print(f"   - {len(self.nombres_fixtures)} equipos en fixtures")
+            print(f"   - {len(self.mapeos_manuales)} mapeos manuales")
             
         except Exception as e:
             print(f"ADVERTENCIA Error cargando nombres: {e}")
             self.nombres_historicos = set()
             self.nombres_fixtures = set()
+            self.mapeos_manuales = {}
     
     def calcular_similitud_avanzada(self, nombre1: str, nombre2: str) -> float:
         """
@@ -200,6 +209,11 @@ class MapeadorDinamicoNombres:
         """
         if not nombre_fixture or not self.nombres_historicos:
             return None
+        
+        # PRIMERO: Verificar mapeos manuales (prioridad máxima)
+        if hasattr(self, 'mapeos_manuales') and nombre_fixture in self.mapeos_manuales:
+            print(f"   MAPEO MANUAL: {nombre_fixture} -> {self.mapeos_manuales[nombre_fixture]}")
+            return self.mapeos_manuales[nombre_fixture]
         
         # Verificar cache primero
         if nombre_fixture in self.mapeo_cache:

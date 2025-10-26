@@ -237,17 +237,26 @@ class PredictorCorregidoSimple:
         h2h_away_wins = reglas['ultimos_5_h2h']['away_wins']
         h2h_total = reglas['ultimos_5_h2h']['partidos']
         
-        # Ajuste por forma
+        # Ajuste por forma - INCREMENTADO para dar más peso a la forma reciente
         form_diff = home_form - away_form
         
-        if form_diff > 0.2:
-            home_prob += 0.05
-            away_prob -= 0.03
-            draw_prob -= 0.02
-        elif form_diff < -0.2:
-            away_prob += 0.05
-            home_prob -= 0.03
-            draw_prob -= 0.02
+        # Ajuste más agresivo basado en forma reciente
+        if form_diff > 0.2:  # Local claramente en mejor forma
+            home_prob += 0.20  # Aumentado significativamente
+            away_prob -= 0.12
+            draw_prob -= 0.08
+        elif form_diff > 0.1:  # Local ligeramente mejor
+            home_prob += 0.10
+            away_prob -= 0.06
+            draw_prob -= 0.04
+        elif form_diff < -0.2:  # Visitante claramente en mejor forma
+            away_prob += 0.20  # Aumentado significativamente
+            home_prob -= 0.12
+            draw_prob -= 0.08
+        elif form_diff < -0.1:  # Visitante ligeramente mejor
+            away_prob += 0.10
+            home_prob -= 0.06
+            draw_prob -= 0.04
         
         # Ajuste por H2H
         if h2h_total >= 2:
