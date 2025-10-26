@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "pip install -r requirements-railway.txt"
+buildCommand = "pip install -r requirements-railway.txt && ls -la && ls -la scripts/ && ls -la src/"
 
 [deploy]
 startCommand = "python app_argon_con_reglas.py"
