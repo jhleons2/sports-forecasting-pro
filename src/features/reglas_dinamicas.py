@@ -21,7 +21,9 @@ from typing import Dict, Optional
 
 def calcular_ultimos_8_liga(df: pd.DataFrame, equipo: str, liga: str, hasta_fecha: Optional[date] = None) -> Dict:
     """
-    Calcula estadísticas de los últimos 8 partidos TOTAL de un equipo en una liga.
+    Calcula estadísticas de los últimos 5 partidos con PESO EXPONENCIAL por recencia.
+    
+    MEJORA: Reducido de 8 a 5 partidos y con peso decreciente (más reciente = más peso)
     
     Parameters:
     -----------
@@ -36,10 +38,9 @@ def calcular_ultimos_8_liga(df: pd.DataFrame, equipo: str, liga: str, hasta_fech
         
     Returns:
     --------
-    dict : Estadísticas de últimos 8 partidos
+    dict : Estadísticas de últimos 5 partidos con peso temporal
     """
     if hasta_fecha is None:
-        # Usar la fecha máxima del dataset en lugar de hoy
         hasta_fecha = pd.to_datetime(df['Date']).max().date()
     
     # Filtrar partidos de la liga hasta la fecha
@@ -52,45 +53,64 @@ def calcular_ultimos_8_liga(df: pd.DataFrame, equipo: str, liga: str, hasta_fech
     partidos_home = df_filtrado[df_filtrado['HomeTeam'] == equipo]
     partidos_away = df_filtrado[df_filtrado['AwayTeam'] == equipo]
     
-    # Combinar y ordenar por fecha
+    # Combinar y ordenar por fecha DESCENDENTE (más reciente primero)
     todos_partidos = pd.concat([partidos_home, partidos_away]).sort_values('Date', ascending=False)
     
-    # Últimos 8
-    ultimos_8 = todos_partidos.head(8)
+    # MEJORA: Solo últimos 5 partidos (antes eran 8)
+    ultimos_5 = todos_partidos.head(5)
     
-    if len(ultimos_8) == 0:
+    if len(ultimos_5) == 0:
         return {'gf': 0, 'ga': 0, 'gd': 0, 'pts': 0, 'partidos': 0, 'efectividad': 0}
     
-    # Calcular estadísticas
+    # PESOS EXPONENCIALES por recencia (más reciente = más peso)
+    # Partido más reciente: peso 1.0
+    # Segundo más reciente: peso 0.8
+    # Tercero: peso 0.6
+    # Cuarto: peso 0.4
+    # Quinto: peso 0.2
+    pesos = [1.0, 0.8, 0.6, 0.4, 0.2]
+    
+    # Calcular estadísticas CON PESOS
     gf = 0
     ga = 0
     pts = 0
+    peso_total = 0
     
-    for _, partido in ultimos_8.iterrows():
+    for idx, (_, partido) in enumerate(ultimos_5.iterrows()):
+        peso = pesos[idx] if idx < len(pesos) else 0.2
+        
         if partido['HomeTeam'] == equipo:
             # Como local
-            gf += partido['FTHG']
-            ga += partido['FTAG']
+            gf += partido['FTHG'] * peso
+            ga += partido['FTAG'] * peso
             if partido['FTHG'] > partido['FTAG']:
-                pts += 3
+                pts += 3 * peso
             elif partido['FTHG'] == partido['FTAG']:
-                pts += 1
+                pts += 1 * peso
         else:
             # Como visitante
-            gf += partido['FTAG']
-            ga += partido['FTHG']
+            gf += partido['FTAG'] * peso
+            ga += partido['FTHG'] * peso
             if partido['FTAG'] > partido['FTHG']:
-                pts += 3
+                pts += 3 * peso
             elif partido['FTAG'] == partido['FTHG']:
-                pts += 1
+                pts += 1 * peso
+        
+        peso_total += peso
+    
+    # Normalizar por peso total
+    if peso_total > 0:
+        gf = gf / peso_total
+        ga = ga / peso_total
+        pts = pts / peso_total
     
     return {
         'gf': gf,
         'ga': ga,
         'gd': gf - ga,
         'pts': pts,
-        'partidos': len(ultimos_8),
-        'efectividad': (pts / (len(ultimos_8) * 3)) * 100 if len(ultimos_8) > 0 else 0
+        'partidos': len(ultimos_5),
+        'efectividad': (pts / 3) * 100 if len(ultimos_5) > 0 else 0
     }
 
 

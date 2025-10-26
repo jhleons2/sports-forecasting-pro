@@ -237,26 +237,49 @@ class PredictorCorregidoSimple:
         h2h_away_wins = reglas['ultimos_5_h2h']['away_wins']
         h2h_total = reglas['ultimos_5_h2h']['partidos']
         
-        # Ajuste por forma - INCREMENTADO para dar más peso a la forma reciente
-        form_diff = home_form - away_form
+        # Obtener ELO actual para cálculos
+        current_elo_home = elo_home if elo_home is not None else 1500.0
+        current_elo_away = elo_away if elo_away is not None else 1500.0
         
-        # Ajuste más agresivo basado en forma reciente
-        if form_diff > 0.2:  # Local claramente en mejor forma
-            home_prob += 0.20  # Aumentado significativamente
-            away_prob -= 0.12
-            draw_prob -= 0.08
-        elif form_diff > 0.1:  # Local ligeramente mejor
-            home_prob += 0.10
-            away_prob -= 0.06
-            draw_prob -= 0.04
-        elif form_diff < -0.2:  # Visitante claramente en mejor forma
-            away_prob += 0.20  # Aumentado significativamente
-            home_prob -= 0.12
-            draw_prob -= 0.08
-        elif form_diff < -0.1:  # Visitante ligeramente mejor
-            away_prob += 0.10
-            home_prob -= 0.06
-            draw_prob -= 0.04
+        # Ajuste por forma - MEJORADO con sistema adaptativo Y más sensible
+        form_diff = home_form - away_form
+        elo_diff = current_elo_home - current_elo_away
+        
+        # MEJORA 1: Ajuste base MÁS AGRESIVO (aumentado a 0.12)
+        base_adjustment = 0.12
+        
+        # MEJORA 2: Ajuste según diferencia de forma (más sensible a diferencias grandes)
+        if abs(form_diff) > 0.4:  # Diferencia EXTREMA
+            adjustment = base_adjustment * 2.0  # 24% - MUY AGRESIVO
+        elif abs(form_diff) > 0.3:  # Diferencia MUY clara
+            adjustment = base_adjustment * 1.8  # 21.6%
+        elif abs(form_diff) > 0.2:  # Diferencia clara
+            adjustment = base_adjustment * 1.4  # 16.8%
+        elif abs(form_diff) > 0.1:  # Diferencia ligera
+            adjustment = base_adjustment * 1.0  # 12%
+        else:
+            adjustment = base_adjustment * 0.5  # 6%
+        
+        # MEJORA 3: Considerar contexto ELO para sorpresas
+        if abs(elo_diff) > 50:
+            # Hay favorito claro - ajustar por sorpresa si diferencia ELO alta
+            if elo_diff < -50:  # Visitante muy favorito
+                adjustment *= 1.4  # Aumentar más las chances de sorpresa
+            elif elo_diff > 50:  # Local muy favorito
+                adjustment *= 0.95  # Ajuste mínimo
+        
+        # Limitar ajuste máximo (aumentado a 20%)
+        adjustment = min(adjustment, 0.20)  # Máximo 20%
+        
+        # Aplicar ajuste
+        if form_diff > 0:  # Local en mejor forma
+            home_prob += adjustment
+            away_prob -= adjustment * 0.6
+            draw_prob -= adjustment * 0.4
+        elif form_diff < 0:  # Visitante en mejor forma
+            away_prob += adjustment
+            home_prob -= adjustment * 0.6
+            draw_prob -= adjustment * 0.4
         
         # Ajuste por H2H
         if h2h_total >= 2:
@@ -273,10 +296,6 @@ class PredictorCorregidoSimple:
         # Aplicar ajuste temporal si hay datos de eficiencia
         original_probs = {'home': home_prob, 'draw': draw_prob, 'away': away_prob}
         
-        # Obtener ELO actual - usar parámetros de la función
-        current_elo_home = elo_home if elo_home is not None else 1500.0
-        current_elo_away = elo_away if elo_away is not None else 1500.0
-        
         # APLICAR MEJORAS DESDE src.features.mejoras_prediccion
         try:
             # Obtener pesos según calidad del rival
@@ -286,9 +305,6 @@ class PredictorCorregidoSimple:
             
             # Aplicar ajuste por riesgo de sorpresa del equipo débil
             underdog_risk = pesos.get('underdog_risk', 0.15)
-            
-            # Si la diferencia de ELO es pequeña, aumentar probabilidad de sorpresa
-            elo_diff = current_elo_home - current_elo_away
             
             # AJUSTE MEJORADO PARA EMPATES
             # Si la diferencia de ELO es MUY pequeña, aumentar significativamente el empate
