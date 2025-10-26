@@ -14,12 +14,21 @@ from pathlib import Path
 
 # Configurar PYTHONPATH para Railway
 ROOT_DIR = Path(__file__).parent.absolute()
+print(f"[DEBUG] ROOT_DIR: {ROOT_DIR}")
+print(f"[DEBUG] __file__: {__file__}")
 sys.path.insert(0, str(ROOT_DIR))
 sys.path.insert(0, str(ROOT_DIR / "scripts"))
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
 # Configurar PYTHONPATH en entorno
 os.environ['PYTHONPATH'] = f"{ROOT_DIR}:{ROOT_DIR}/scripts:{ROOT_DIR}/src"
+print(f"[DEBUG] PYTHONPATH: {os.environ['PYTHONPATH']}")
+print(f"[DEBUG] sys.path: {sys.path[:5]}")
+
+# Verificar que los directorios existen
+print(f"[DEBUG] Existe scripts/: {(ROOT_DIR / 'scripts').exists()}")
+print(f"[DEBUG] Existe src/: {(ROOT_DIR / 'src').exists()}")
+print(f"[DEBUG] Existe scripts/predictor_corregido_simple.py: {(ROOT_DIR / 'scripts' / 'predictor_corregido_simple.py').exists()}")
 
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
