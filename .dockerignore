@@ -55,7 +55,6 @@ data/interim/
 reports/
 *.md
 !README.md
-scripts/
 docs/
 Makefile
 *.csv
@@ -70,6 +69,7 @@ Makefile
 # Keep only essential files
 !app_argon_con_reglas.py
 !src/
+!scripts/
 !templates/
 !static/
 !config/
